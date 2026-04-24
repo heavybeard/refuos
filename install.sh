@@ -1,68 +1,71 @@
 #!/bin/bash
-# Refuos — Installer
+# Refuos - Installer (macOS and Linux)
 # Usage: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/heavybeard/refuos/main/install.sh)"
 set -e
 
-REPO="https://github.com/heavybeard/refuos.git"
-INSTALL_DIR="$HOME/.refuos"
+REPO="heavybeard/refuos"
+BASE_URL="https://github.com/$REPO/releases/latest/download"
+PACKAGES=(refuos-italiano.yml refuos-accenti.yml refuos-dev.yml)
+OS="$(uname -s)"
 
 echo ""
-echo "🔤 Refuos — Installer"
-echo "====================="
+echo "Refuos - Installer"
+echo "=================="
 echo ""
 
 # 1. Check/install Espanso
 if ! command -v espanso &> /dev/null; then
-    echo "📦 Installo Espanso..."
-    if ! command -v brew &> /dev/null; then
-        echo "❌ Homebrew non trovato. Installa Homebrew prima: https://brew.sh"
+    if [ "$OS" = "Darwin" ]; then
+        echo "Installing Espanso via Homebrew..."
+        if ! command -v brew &> /dev/null; then
+            echo "Error: Homebrew not found. Install it first: https://brew.sh"
+            exit 1
+        fi
+        brew install espanso
+        espanso service register
+        espanso start
+        echo ""
+        echo "Note: macOS will ask you to enable Espanso in:"
+        echo "   System Settings -> Privacy & Security -> Accessibility"
+        echo ""
+        read -p "Press Enter after enabling the permission..."
+        espanso restart
+    elif [ "$OS" = "Linux" ]; then
+        echo "Error: Espanso not found."
+        echo "Download and install Espanso for Linux from: https://espanso.org/install/linux/"
+        exit 1
+    else
+        echo "Error: unsupported operating system. Install Espanso from: https://espanso.org"
         exit 1
     fi
-    brew install espanso
-    espanso service register
-    espanso start
-    echo ""
-    echo "⚠️  macOS ti chiederà di abilitare Espanso in:"
-    echo "   Impostazioni di Sistema → Privacy e Sicurezza → Accessibilità"
-    echo ""
-    read -p "Premi Enter dopo aver abilitato il permesso..."
-    espanso restart
 else
-    echo "✅ Espanso già installato"
+    echo "Espanso already installed"
 fi
 
-# 2. Check Python
-if ! command -v python3 &> /dev/null; then
-    echo "❌ Python 3 non trovato. Installa con: brew install python3"
-    exit 1
-fi
+# 2. Find Espanso match directory
+MATCH_DIR="$(espanso path config)/match"
+mkdir -p "$MATCH_DIR"
 
-# 3. Clone/update repo
-if [ -d "$INSTALL_DIR" ]; then
-    echo "🔄 Aggiorno Refuos..."
-    cd "$INSTALL_DIR"
-    git pull --quiet
-else
-    echo "📥 Scarico Refuos..."
-    git clone --quiet "$REPO" "$INSTALL_DIR"
-    cd "$INSTALL_DIR"
-fi
+# 3. Download pre-built rules (no Python, no Git required)
+echo "Downloading Refuos rules..."
+echo ""
+for pkg in "${PACKAGES[@]}"; do
+    curl -fsSL "$BASE_URL/$pkg" -o "$MATCH_DIR/$pkg"
+    echo "  ok  $pkg"
+done
 
-# 4. Generate rules
-echo "⚙️  Genero le regole di autocorrezione..."
-python3 generate_espanso.py
-
-# 5. Restart Espanso
+# 4. Restart Espanso
 espanso restart
 
 echo ""
-echo "✅ Refuos installato! 3 pacchetti:"
-echo "   📄 refuos-italiano.yml  — parole quotidiane"
-echo "   📄 refuos-accenti.yml   — accenti e futuri"
-echo "   📄 refuos-dev.yml       — termini tech/codice"
+echo "Refuos installed. 3 packages:"
+echo "   refuos-italiano.yml  - everyday Italian words"
+echo "   refuos-accenti.yml   - accents and future tense"
+echo "   refuos-dev.yml       - tech/code terms"
 echo ""
-echo "   Prova a scrivere 'perche' in qualsiasi app — diventerà 'perché'"
-echo "   Per rimuovere un pacchetto: elimina il .yml dalla cartella di Espanso"
+echo "   Try typing 'perche' in any app - it becomes 'perche''"
+echo "   To remove a package: delete its .yml file from:"
+echo "   $MATCH_DIR"
 echo ""
-echo "   Per aggiornare: cd ~/.refuos && git pull && python3 generate_espanso.py && espanso restart"
+echo "   To update: re-run this installer at any time"
 echo ""
