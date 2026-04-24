@@ -161,6 +161,13 @@ Some ideas under consideration:
 - Domain-specific word lists (medical, legal, academic, ...)
 - A `--dry-run` mode that prints stats without writing files
 
+## Support
+
+If you find Refuos useful, consider supporting its development:
+
+[![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-%E2%9D%A4-pink?logo=github)](https://github.com/sponsors/heavybeard)
+[![Donate with PayPal](https://img.shields.io/badge/Donate-PayPal-blue?logo=paypal)](https://www.paypal.com/donate/?hosted_button_id=F2MP7WP47RQ5U)
+
 ## License
 
 MIT - [Andrea Cognini](https://github.com/heavybeard)
