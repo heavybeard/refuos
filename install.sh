@@ -1,7 +1,7 @@
 #!/bin/bash
 # Refuos - Installer (macOS and Linux)
 # Usage: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/heavybeard/refuos/main/install.sh)"
-set -e
+set -euo pipefail
 
 REPO="heavybeard/refuos"
 BASE_URL="https://github.com/$REPO/releases/latest/download"
@@ -49,10 +49,31 @@ mkdir -p "$MATCH_DIR"
 # 3. Download pre-built rules (no Python, no Git required)
 echo "Downloading Refuos rules..."
 echo ""
+
+# Download checksums file for integrity verification
+CHECKSUM_FILE="$(mktemp)"
+curl -fsSL "$BASE_URL/checksums.sha256" -o "$CHECKSUM_FILE"
+
 for pkg in "${PACKAGES[@]}"; do
     curl -fsSL "$BASE_URL/$pkg" -o "$MATCH_DIR/$pkg"
+    # Verify integrity: use shasum on macOS, sha256sum on Linux
+    if [ "$OS" = "Darwin" ]; then
+        expected=$(grep "$pkg" "$CHECKSUM_FILE" | awk '{print $1}')
+        actual=$(shasum -a 256 "$MATCH_DIR/$pkg" | awk '{print $1}')
+    else
+        expected=$(grep "$pkg" "$CHECKSUM_FILE" | awk '{print $1}')
+        actual=$(sha256sum "$MATCH_DIR/$pkg" | awk '{print $1}')
+    fi
+    if [ "$expected" != "$actual" ]; then
+        echo "Error: checksum mismatch for $pkg (expected $expected, got $actual)"
+        rm -f "$MATCH_DIR/$pkg"
+        rm -f "$CHECKSUM_FILE"
+        exit 1
+    fi
     echo "  ok  $pkg"
 done
+
+rm -f "$CHECKSUM_FILE"
 
 # 4. Restart Espanso
 espanso restart
