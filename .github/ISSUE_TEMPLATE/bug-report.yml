@@ -1,0 +1,57 @@
+name: "Wrong correction"
+description: "Refuos corrected a word it shouldn't have, or corrected it to the wrong thing."
+title: "bug: '<typed>' corrected to '<wrong>'"
+labels: ["bug"]
+body:
+  - type: input
+    id: typed
+    attributes:
+      label: "What you typed"
+      placeholder: "es. cosnt"
+    validations:
+      required: true
+
+  - type: input
+    id: got
+    attributes:
+      label: "What it was corrected to"
+      placeholder: "es. const"
+    validations:
+      required: true
+
+  - type: input
+    id: expected
+    attributes:
+      label: "What you expected"
+      description: "What should have happened? (leave blank if the correction should simply not fire)"
+      placeholder: "es. cosnt (no correction)"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: "Operating system"
+      options:
+        - macOS
+        - Linux
+        - Windows
+    validations:
+      required: true
+
+  - type: input
+    id: espanso_version
+    attributes:
+      label: "Espanso version"
+      description: "Run 'espanso --version' to find out."
+      placeholder: "es. 2.2.1"
+    validations:
+      required: false
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: "Additional context"
+      description: "Application where the issue happened, any other details."
+    validations:
+      required: false

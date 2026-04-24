@@ -1,0 +1,43 @@
+name: "Propose a new dictionary"
+description: "Suggest an entirely new language or domain dictionary."
+title: "dict: <language or domain>"
+labels: ["new-dictionary"]
+body:
+  - type: input
+    id: name
+    attributes:
+      label: "Dictionary name"
+      description: "Short name for the dictionary (used as filename, e.g. 'francese', 'medical')."
+      placeholder: "es. francese"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "Description"
+      description: "What does this dictionary cover? Who is it for?"
+      placeholder: "Everyday French words for Italian speakers who also write in French."
+    validations:
+      required: true
+
+  - type: textarea
+    id: sample
+    attributes:
+      label: "Sample word list (at least 20 words)"
+      description: "Paste a representative list so we can evaluate quality and scope. One word per line."
+      placeholder: |
+        bonjour
+        merci
+        voiture
+        ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: "Motivation"
+      description: "Why should this be included in Refuos?"
+    validations:
+      required: false

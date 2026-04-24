@@ -1,0 +1,74 @@
+name: Validate
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  validate:
+    name: Validate dictionaries and generate rules
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check for duplicate or conflicting words
+        run: python3 generate_espanso.py --check
+
+      - name: Generate YAML files (dry run to a temp dir)
+        run: python3 generate_espanso.py --output-dir /tmp/refuos-out
+
+      - name: Install pyyaml
+        run: pip install pyyaml --quiet
+
+      - name: Verify generated YAML is parseable
+        run: |
+          python3 - <<'EOF'
+          import yaml, os, sys
+
+          out_dir = "/tmp/refuos-out"
+          files = [f for f in os.listdir(out_dir) if f.endswith(".yml")]
+          if not files:
+              print("ERROR: no YAML files were generated")
+              sys.exit(1)
+
+          errors = []
+          for fname in sorted(files):
+              path = os.path.join(out_dir, fname)
+              try:
+                  with open(path, encoding="utf-8") as f:
+                      yaml.safe_load(f)
+                  print(f"  ok  {fname}")
+              except yaml.YAMLError as e:
+                  errors.append(f"  FAIL  {fname}: {e}")
+
+          if errors:
+              for e in errors:
+                  print(e)
+              sys.exit(1)
+          EOF
+
+      - name: Print rule counts
+        run: |
+          python3 - <<'EOF'
+          import yaml, os
+
+          out_dir = "/tmp/refuos-out"
+          total = 0
+          for fname in sorted(os.listdir(out_dir)):
+              if not fname.endswith(".yml"):
+                  continue
+              with open(os.path.join(out_dir, fname), encoding="utf-8") as f:
+                  data = yaml.safe_load(f)
+              count = len(data.get("matches", []))
+              total += count
+              print(f"  {fname:<28} {count:>5,} rules")
+          print(f"\n  Total: {total:,} rules")
+          EOF

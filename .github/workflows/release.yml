@@ -1,0 +1,83 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    name: Build and publish release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate dictionaries
+        run: python3 generate_espanso.py --check
+
+      - name: Generate YAML rules
+        run: python3 generate_espanso.py --output-dir build/
+
+      - name: Verify generated YAML is parseable
+        run: |
+          pip install pyyaml --quiet
+          python3 - <<'EOF'
+          import yaml, os, sys
+          errors = []
+          for fname in sorted(os.listdir("build")):
+              if not fname.endswith(".yml"):
+                  continue
+              with open(f"build/{fname}", encoding="utf-8") as f:
+                  try:
+                      yaml.safe_load(f)
+                      print(f"  ok  {fname}")
+                  except yaml.YAMLError as e:
+                      errors.append(f"  FAIL  {fname}: {e}")
+          if errors:
+              print("\n".join(errors))
+              sys.exit(1)
+          EOF
+
+      - name: Create ZIP bundle
+        run: |
+          cd build
+          zip ../refuos-rules.zip refuos-*.yml
+
+      - name: Generate Espanso Hub packages
+        run: python3 generate_espanso.py --espanso-packages espanso-packages/
+
+      - name: Print rule counts
+        run: |
+          python3 - <<'EOF'
+          import yaml, os
+          total = 0
+          for fname in sorted(os.listdir("build")):
+              if not fname.endswith(".yml"):
+                  continue
+              with open(f"build/{fname}", encoding="utf-8") as f:
+                  data = yaml.safe_load(f)
+              count = len(data.get("matches", []))
+              total += count
+              print(f"  {fname:<30} {count:>5,} rules")
+          print(f"\n  Total: {total:,} rules")
+          EOF
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            refuos-rules.zip
+            build/refuos-italiano.yml
+            build/refuos-accenti.yml
+            build/refuos-dev.yml
