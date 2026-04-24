@@ -22,11 +22,14 @@ jobs:
       - name: Check for duplicate or conflicting words
         run: python3 generate_espanso.py --check
 
+      - name: Install dev dependencies
+        run: pip install -r requirements-dev.txt --quiet
+
+      - name: Run test suite
+        run: pytest tests/ -v
+
       - name: Generate YAML files (dry run to a temp dir)
         run: python3 generate_espanso.py --output-dir /tmp/refuos-out
-
-      - name: Install pyyaml
-        run: pip install pyyaml --quiet
 
       - name: Verify generated YAML is parseable
         run: |
