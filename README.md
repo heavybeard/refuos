@@ -2,24 +2,21 @@
 
 > *refuos* — come scriveresti "refuso" di fretta. Ed è esattamente il problema che risolve.
 
-Autocorrezione real-time per macOS. **9.000+ regole** che correggono typo mentre scrivi — lettere invertite, accenti mancanti, doppie saltate — ovunque: Slack, browser, terminale, qualsiasi app.
+Autocorrezione real-time per macOS. **8.000+ regole** che correggono typo mentre scrivi — lettere invertite, accenti mancanti, doppie saltate — ovunque: Slack, browser, terminale, qualsiasi app.
 
-Zero latenza, tutto offline, nessun account richiesto.
+Zero latenza, tutto offline, nessun account richiesto. Usa [Espanso](https://espanso.org).
 
-Usa [Espanso](https://espanso.org), un text expander open-source.
+## Pacchetti
 
-## Esempi
+Tre file indipendenti. Installa tutti o solo quelli che ti servono.
 
-| Scrivi | Diventa |
-|---|---|
-| `perche` | perché |
-| `aggiungero` | aggiungerò |
-| `acnhe` | anche |
-| `possibilita` | possibilità |
-| `cosnt` | const |
-| `reutrn` | return |
-| `comunqeu` | comunque |
-| `velcoemente` | velocemente |
+| Pacchetto | File | Regole | Cosa corregge |
+|---|---|---|---|
+| **Italiano** | `refuos-italiano.yml` | ~2.500 | Parole quotidiane: `acnhe` → anche, `comunqeu` → comunque |
+| **Accenti** | `refuos-accenti.yml` | ~4.700 | Accenti e futuri: `perche` → perché, `aggiungero` → aggiungerò |
+| **Dev** | `refuos-dev.yml` | ~1.100 | Termini tech: `cosnt` → const, `reutrn` → return |
+
+Per rimuovere un pacchetto basta eliminare il file `.yml` corrispondente dalla cartella di Espanso.
 
 ## Installazione (2 minuti)
 
@@ -27,56 +24,45 @@ Usa [Espanso](https://espanso.org), un text expander open-source.
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/heavybeard/refuos/main/install.sh)"
 ```
 
-### Cosa fa
-
-Un generatore Python analizza ~850 parole italiane ad alta frequenza + 112 termini tech e produce **tutte le varianti typo plausibili**: trasposizioni, doppie mancanti, accenti sbagliati, lettere mancanti. Il risultato è un file di configurazione Espanso che corregge in tempo reale.
-
-Include anche regole regex catch-all per i verbi al futuro (`aggiungero` → `aggiungerò`) e i sostantivi in `-ità` (`possibilita` → `possibilità`).
-
-### Installazione manuale
-
-Se preferisci fare tutto a mano:
+### Manuale
 
 ```bash
 # 1. Installa Espanso (se non ce l'hai)
 brew install espanso
 espanso service register
 espanso start
-# ⚠️ macOS chiederà il permesso Accessibilità: accetta in
-# Impostazioni di Sistema → Privacy e Sicurezza → Accessibilità
+# ⚠️ macOS chiederà il permesso Accessibilità — accetta
 
-# 2. Clona il repo e genera le regole
-git clone https://github.com/heavybeard/refuos.git
-cd refuos
+# 2. Clona e genera
+git clone https://github.com/heavybeard/refuos.git ~/.refuos
+cd ~/.refuos
 python3 generate_espanso.py
 
-# 3. Riavvia Espanso
+# 3. Riavvia
 espanso restart
 ```
 
 ## Aggiungere parole
 
-Apri `generate_espanso.py`, aggiungi le parole nella lista `ITALIAN_WORDS` o `TECH_WORDS`, e rigenera:
+Apri `generate_espanso.py`, aggiungi le parole nella lista giusta (`ITALIANO_WORDS`, `ACCENTI_WORDS` o `DEV_WORDS`), e rigenera:
 
 ```bash
-python3 generate_espanso.py
-espanso restart
+cd ~/.refuos && python3 generate_espanso.py && espanso restart
 ```
 
-Oppure apri una [issue](https://github.com/heavybeard/refuos/issues) e le aggiungo io.
+Oppure apri una [issue](https://github.com/heavybeard/refuos/issues).
 
 ## Aggiornamento
 
 ```bash
-cd ~/.refuos
-git pull
-python3 generate_espanso.py
-espanso restart
+cd ~/.refuos && git pull && python3 generate_espanso.py && espanso restart
 ```
 
 ## Come funziona
 
-Espanso gira in background e monitora la tastiera. Quando finisci di scrivere una parola che matcha un typo nel dizionario, la sostituisce istantaneamente. Non serve fare niente: scrivi e basta.
+Un generatore Python prende le parole dai tre dizionari e produce automaticamente tutte le varianti typo plausibili: trasposizioni di lettere adiacenti, doppie mancanti, accenti sbagliati, lettere saltate. Il risultato sono file YAML che Espanso usa per correggere in tempo reale.
+
+Include anche regole regex catch-all per i pattern che non si possono enumerare (verbi al futuro, sostantivi in `-ità`).
 
 ## Requisiti
 
@@ -86,4 +72,4 @@ Espanso gira in background e monitora la tastiera. Quando finisci di scrivere un
 
 ## License
 
-MIT — Andrea Cognini
+MIT — [Andrea Cognini](https://github.com/heavybeard)

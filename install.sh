@@ -56,8 +56,13 @@ python3 generate_espanso.py
 espanso restart
 
 echo ""
-echo "✅ Refuos installato!"
+echo "✅ Refuos installato! 3 pacchetti:"
+echo "   📄 refuos-italiano.yml  — parole quotidiane"
+echo "   📄 refuos-accenti.yml   — accenti e futuri"
+echo "   📄 refuos-dev.yml       — termini tech/codice"
+echo ""
 echo "   Prova a scrivere 'perche' in qualsiasi app — diventerà 'perché'"
+echo "   Per rimuovere un pacchetto: elimina il .yml dalla cartella di Espanso"
 echo ""
 echo "   Per aggiornare: cd ~/.refuos && git pull && python3 generate_espanso.py && espanso restart"
 echo ""

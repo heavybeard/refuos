@@ -2,10 +2,17 @@
 """
 Refuos — Generatore regole Espanso
 https://github.com/heavybeard/refuos
-Genera tutte le varianti typo plausibili per parole italiane + termini tech.
+
+Genera file YAML modulari per Espanso. Ogni pacchetto è indipendente:
+  - refuos-italiano.yml  → parole italiane quotidiane
+  - refuos-accenti.yml   → accenti, verbi futuri, sostantivi -ità
+  - refuos-dev.yml       → termini tech/codice
 """
 import os, subprocess
 
+# -------------------------------------------------------------------
+# Utils
+# -------------------------------------------------------------------
 QWERTY_NEIGHBORS = {
     'q': 'wa', 'w': 'qeas', 'e': 'wrds', 'r': 'etdf', 't': 'ryfg',
     'y': 'tugh', 'u': 'yijh', 'i': 'uokj', 'o': 'iplk', 'p': 'ol',
@@ -19,20 +26,20 @@ ACCENT_REPLACE_MAP = {
     'ì': ['i', "i'"], 'ò': ['o', "o'"], 'ù': ['u', "u'"],
 }
 
-# -------------------------------------------------------------------
-# DIZIONARIO ITALIANO — Aggiungi parole qui e rigenera
-# -------------------------------------------------------------------
-ITALIAN_WORDS = """
+# ===================================================================
+# 📦 PACCHETTO 1: ITALIANO — Parole quotidiane
+# ===================================================================
+ITALIANO_WORDS = """
 il lo la i gli le un uno una
 di a da in con su per tra fra
-e o ma anche però quindi perché quando come dove
+e o ma anche quindi quando come dove
 che chi cosa quale quanto
-non più molto poco tutto tanto troppo sempre mai ancora già
+non molto poco tutto tanto troppo sempre mai ancora
 io tu lui lei noi voi loro
 mi ti ci si vi ne lo la li le
 essere avere fare dire andare venire potere volere dovere sapere
 stare dare vedere sentire trovare pensare credere mettere prendere portare
-sono sei è siamo siete sono
+sono sei siamo siete
 ho hai ha abbiamo avete hanno
 ero eri era eravamo eravate erano
 faccio fai fa facciamo fate fanno
@@ -46,11 +53,11 @@ buono buona cattivo cattiva grande piccolo bello bella brutto brutta
 nuovo nuova vecchio vecchia giovane alto bassa lungo corto largo stretto
 caro cara facile difficile possibile impossibile necessario importante
 bene male meglio peggio
-qui qua là lì sopra sotto dentro fuori vicino lontano
+qui qua sopra sotto dentro fuori vicino lontano
 oggi domani ieri adesso ora poi prima dopo subito
-sì no forse
+forse
 acqua casa anno tempo giorno vita uomo donna bambino ragazzo
-lavoro scuola città paese mondo parte modo punto fatto cosa
+lavoro scuola paese mondo parte modo punto fatto cosa
 mano testa occhio bocca cuore corpo
 amico famiglia padre madre figlio figlia fratello sorella
 numero nome parola storia problema esempio caso tipo
@@ -61,29 +68,33 @@ chiamare aspettare tornare restare lasciare tenere
 momento risultato progetto servizio sistema processo obiettivo
 domanda risposta soluzione decisione situazione condizione
 qualcosa qualcuno nessuno ognuno ciascuno
-comunque tuttavia inoltre infatti perciò dunque
+comunque tuttavia inoltre infatti dunque
 attraverso durante senza contro verso secondo
 insieme davvero proprio appena quasi almeno
 settimana mese anno minuto secondo ora
-lunedì martedì mercoledì giovedì venerdì sabato domenica
-gennaio febbraio marzo aprile maggio giugno
-luglio agosto settembre ottobre novembre dicembre
-perché poiché affinché benché sebbene nonostante
-veloce velocemente possibile impossibile
-sicuro sicuramente probabilmente certamente
-problema problemi soluzione soluzioni
 messaggio informazione comunicazione
 attenzione esperienza conoscenza
 sviluppo aggiornamento miglioramento cambiamento
-appuntamento disponibile disponibilità
+appuntamento disponibile
 funzionare funziona funzionamento
 organizzare organizzazione collaborare collaborazione
 presentazione documentazione
-psicoterapia psicoterapeuta terapeuta terapia
-nutrizione nutrizionista alimentazione
-medicina medico paziente benessere salute mentale
-percorso sessione consulenza prenotazione prenotare
-piattaforma applicazione
+problema problemi soluzione soluzioni
+""".split()
+
+# ===================================================================
+# 📦 PACCHETTO 2: ACCENTI — Accenti, futuri, -ità
+# ===================================================================
+ACCENTI_WORDS = """
+è già più giù può ciò così però perciò cioè sì là lì
+perché poiché affinché benché sebbene nonostante
+giacché allorché purché finché cosicché
+città disponibilità
+attività capacità possibilità responsabilità qualità
+quantità identità realtà libertà difficoltà facilità utilità necessità
+università curiosità creatività sensibilità vulnerabilità
+veloce velocemente sicuro sicuramente probabilmente certamente
+lunedì martedì mercoledì giovedì venerdì
 andrò andrai andrà andremo andranno
 farò farai farà faremo faranno
 sarò sarai sarà saremo saranno
@@ -143,17 +154,12 @@ passerò passerai passerà passeremo passeranno
 riceverò riceverai riceverà riceveremo riceveranno
 condividerò condividerai condividerà condivideremo condivideranno
 completerò completerai completerà completeremo completeranno
-già più giù può ciò così però perciò cioè
-affinché giacché allorché purché finché cosicché
-attività capacità possibilità disponibilità responsabilità qualità
-quantità identità realtà libertà difficoltà facilità utilità necessità
-università curiosità creatività sensibilità vulnerabilità
 """.split()
 
-# -------------------------------------------------------------------
-# DIZIONARIO TECH — Aggiungi termini qui e rigenera
-# -------------------------------------------------------------------
-TECH_WORDS = """
+# ===================================================================
+# 📦 PACCHETTO 3: DEV — Termini tech/codice
+# ===================================================================
+DEV_WORDS = """
 component components import export default function return const let var
 string number boolean null undefined async await promise
 useState useEffect useRef useCallback useMemo useContext
@@ -173,9 +179,11 @@ search filter sort pagination scroll
 table list grid card badge avatar
 """.split()
 
-# -------------------------------------------------------------------
+# ===================================================================
 # Generatori di typo
-# -------------------------------------------------------------------
+# ===================================================================
+ALL_WORDS = set(ITALIANO_WORDS) | set(ACCENTI_WORDS) | set(DEV_WORDS)
+
 def generate_transpositions(word):
     typos = set()
     for i in range(len(word) - 1):
@@ -212,39 +220,40 @@ def generate_accent_variants(word):
                 if typo != word: typos.add(typo)
     return typos
 
-def generate_all_typos(word, is_tech=False):
+def generate_all_typos(word, include_accents=True):
     typos = set()
     typos |= generate_transpositions(word)
     typos |= generate_missing_double(word)
-    if not is_tech:
+    if include_accents:
         typos |= generate_accent_variants(word)
     if len(word) >= 5:
         typos |= generate_missing_char(word)
-    all_valid = set(ITALIAN_WORDS) | set(TECH_WORDS)
-    typos -= all_valid
+    typos -= ALL_WORDS
     typos.discard(word)
     return {t for t in typos if len(t) >= 2}
 
 def esc(s):
     return f'"{s}"'
 
-# -------------------------------------------------------------------
-# Generatore YAML
-# -------------------------------------------------------------------
-def generate_yaml():
-    lines = [
-        "# Refuos — Autocorrezione real-time",
+# ===================================================================
+# Generazione multi-file
+# ===================================================================
+def make_header(title, desc):
+    return [
+        f"# Refuos — {title}",
+        f"# {desc}",
         "# https://github.com/heavybeard/refuos",
-        "# File auto-generato — rigenera con: python3 generate_espanso.py",
+        "# Auto-generato — rigenera con: python3 generate_espanso.py",
         "", "matches:", "",
-        "  # ITALIANO — Parole ad alta frequenza",
     ]
+
+def generate_pack(words, title, desc, include_accents=True):
+    lines = make_header(title, desc)
     total = 0
     seen = set()
-
-    for word in sorted(set(ITALIAN_WORDS)):
+    for word in sorted(set(words)):
         if len(word) < 3: continue
-        for typo in sorted(generate_all_typos(word)):
+        for typo in sorted(generate_all_typos(word, include_accents)):
             if typo in seen: continue
             seen.add(typo)
             lines.append(f"  - trigger: {esc(typo)}")
@@ -254,21 +263,17 @@ def generate_yaml():
             lines.append("    word: true")
             lines.append("")
             total += 1
+    return '\n'.join(lines), total
 
-    lines.append("  # TECH — Termini inglesi comuni")
-    for word in sorted(set(TECH_WORDS)):
-        if len(word) < 3: continue
-        for typo in sorted(generate_all_typos(word, is_tech=True)):
-            if typo in seen: continue
-            seen.add(typo)
-            lines.append(f"  - trigger: {esc(typo)}")
-            lines.append(f"    replace: {esc(word)}")
-            lines.append("    word: true")
-            lines.append("")
-            total += 1
-
-    # Regex catch-all per accenti
-    lines.append("  # REGEX — Pattern accenti (catch-all)")
+def generate_accenti_pack():
+    content, total = generate_pack(
+        ACCENTI_WORDS, "Accenti",
+        "Accenti mancanti, verbi futuri, sostantivi in -ità"
+    )
+    # Append regex catch-all
+    regex_lines = [
+        "  # REGEX — Pattern catch-all per accenti",
+    ]
     for pattern, repl, comment in [
         ("(?P<stem>[a-z]{6,})ero$", "{{stem}}erò", "Futuro 1p -erò"),
         ("(?P<stem>[a-z]{6,})era$", "{{stem}}erà", "Futuro 3p -erà"),
@@ -276,20 +281,26 @@ def generate_yaml():
         ("(?P<stem>[a-z]{6,})ira$", "{{stem}}irà", "Futuro 3p -irà"),
         ("(?P<stem>[a-z]{8,})ita$", "{{stem}}ità", "Sostantivi -ità"),
     ]:
-        lines.append(f"  # {comment}")
-        lines.append(f"  - regex: {esc(pattern)}")
-        lines.append(f"    replace: {esc(repl)}")
-        lines.append("    word: true")
-        lines.append("")
+        regex_lines.append(f"  # {comment}")
+        regex_lines.append(f"  - regex: {esc(pattern)}")
+        regex_lines.append(f"    replace: {esc(repl)}")
+        regex_lines.append("    word: true")
+        regex_lines.append("")
         total += 1
+    return content + '\n' + '\n'.join(regex_lines), total
 
-    return '\n'.join(lines), total
+def generate_dev_pack():
+    content, total = generate_pack(
+        DEV_WORDS, "Dev",
+        "Termini tech e codice (JS, React, CSS, Git...)",
+        include_accents=False
+    )
+    return content, total
 
-# -------------------------------------------------------------------
+# ===================================================================
 # Main
-# -------------------------------------------------------------------
+# ===================================================================
 def get_espanso_config_path():
-    """Rileva automaticamente il percorso config di Espanso."""
     try:
         result = subprocess.run(
             ["espanso", "path", "config"],
@@ -299,42 +310,56 @@ def get_espanso_config_path():
             return result.stdout.strip()
     except (FileNotFoundError, subprocess.TimeoutExpired):
         pass
-    # Fallback macOS
-    fallback = os.path.expanduser(
-        "~/Library/Application Support/espanso"
-    )
+    fallback = os.path.expanduser("~/Library/Application Support/espanso")
     if os.path.isdir(fallback):
         return fallback
     return None
 
+def write_pack(match_dir, filename, content, total):
+    path = os.path.join(match_dir, filename)
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write(content)
+    size = os.path.getsize(path) / 1024
+    print(f"  ✅ {filename:<25} {total:>5,} regole  ({size:.0f} KB)")
+    return total
+
 if __name__ == "__main__":
     print("🔤 Refuos — Generatore regole Espanso")
     print("=" * 45)
-    words = len(set(ITALIAN_WORDS)) + len(set(TECH_WORDS))
-    print(f"📖 Dizionario: {words} parole")
-    print("⚙️  Generazione typo in corso...")
-
-    yaml_content, total = generate_yaml()
 
     config_path = get_espanso_config_path()
-    if config_path:
-        match_dir = os.path.join(config_path, "match")
-        os.makedirs(match_dir, exist_ok=True)
-        out = os.path.join(match_dir, "italian-realtime.yml")
-        with open(out, 'w', encoding='utf-8') as f:
-            f.write(yaml_content)
-        size_kb = os.path.getsize(out) / 1024
-        print(f"")
-        print(f"✅ {total:,} regole scritte ({size_kb:.0f} KB)")
-        print(f"📂 {out}")
-        print(f"")
-        print(f"Riavvia Espanso: espanso restart")
-    else:
-        out = "italian-realtime.yml"
-        with open(out, 'w', encoding='utf-8') as f:
-            f.write(yaml_content)
-        print(f"")
-        print(f"✅ {total:,} regole generate in {out}")
-        print(f"⚠️  Espanso non trovato.")
-        print(f'   Copia il file manualmente:')
-        print(f'   cp {out} "$(espanso path config)/match/"')
+    if not config_path:
+        print("⚠️  Espanso non trovato. Genera i file nella cartella corrente.")
+        config_path = "."
+
+    match_dir = os.path.join(config_path, "match")
+    os.makedirs(match_dir, exist_ok=True)
+
+    # Rimuovi il vecchio file monolitico se esiste
+    old_file = os.path.join(match_dir, "italian-realtime.yml")
+    if os.path.exists(old_file):
+        os.remove(old_file)
+        print(f"  🗑  Rimosso vecchio file: italian-realtime.yml")
+
+    print(f"  📂 {match_dir}\n")
+
+    grand_total = 0
+
+    # Pack 1: Italiano
+    it_content, it_total = generate_pack(
+        ITALIANO_WORDS, "Italiano",
+        "Parole italiane quotidiane"
+    )
+    grand_total += write_pack(match_dir, "refuos-italiano.yml", it_content, it_total)
+
+    # Pack 2: Accenti
+    acc_content, acc_total = generate_accenti_pack()
+    grand_total += write_pack(match_dir, "refuos-accenti.yml", acc_content, acc_total)
+
+    # Pack 3: Dev
+    dev_content, dev_total = generate_dev_pack()
+    grand_total += write_pack(match_dir, "refuos-dev.yml", dev_content, dev_total)
+
+    print(f"\n  📊 Totale: {grand_total:,} regole in 3 pacchetti")
+    print(f"\n  Riavvia Espanso: espanso restart")
+    print(f"  Per rimuovere un pacchetto: elimina il file .yml corrispondente")
