@@ -1,5 +1,6 @@
 """Integrity tests for the real dictionary .txt files in dictionaries/."""
 import os
+
 import pytest
 
 REPO_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

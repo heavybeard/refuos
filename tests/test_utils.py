@@ -2,11 +2,11 @@
 import os
 import re
 import subprocess
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
-import generate_espanso as ge
 
+import generate_espanso as ge
 
 # ---------------------------------------------------------------------------
 # esc()

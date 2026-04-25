@@ -35,11 +35,11 @@ Regex catch-all rules are also included for patterns that can't be enumerated (f
 
 Three independent files. Install all of them or only the ones you need.
 
-| Package      | File                  | Rules  | What it fixes                                                      |
-| ------------ | --------------------- | ------ | ------------------------------------------------------------------ |
-| **Italiano** | `refuos-italiano.yml` | ~2,500 | Everyday words: `acnhe` -> anche, `comunqeu` -> comunque          |
+| Package      | File                  | Rules  | What it fixes                                                       |
+| ------------ | --------------------- | ------ | ------------------------------------------------------------------- |
+| **Italiano** | `refuos-italiano.yml` | ~2,500 | Everyday words: `acnhe` -> anche, `comunqeu` -> comunque            |
 | **Accenti**  | `refuos-accenti.yml`  | ~4,700 | Accents & futures: `perche` -> perche', `aggiungero` -> aggiungero' |
-| **Dev**      | `refuos-dev.yml`      | ~1,100 | Tech terms: `cosnt` -> const, `reutrn` -> return                  |
+| **Dev**      | `refuos-dev.yml`      | ~1,100 | Tech terms: `cosnt` -> const, `reutrn` -> return                    |
 
 To remove a package, simply delete the corresponding `.yml` file from the Espanso folder.
 
@@ -102,11 +102,11 @@ The scripts download the pre-built rules directly from the latest release — no
 
 Words live in plain text files inside the `dictionaries/` folder — one word per line:
 
-| File                       | What to put there                              |
-| -------------------------- | ---------------------------------------------- |
-| `dictionaries/italiano.txt` | Everyday Italian words                        |
+| File                        | What to put there                              |
+| --------------------------- | ---------------------------------------------- |
+| `dictionaries/italiano.txt` | Everyday Italian words                         |
 | `dictionaries/accenti.txt`  | Accented words, future-tense verbs, -ità nouns |
-| `dictionaries/dev.txt`      | Tech and code terms                           |
+| `dictionaries/dev.txt`      | Tech and code terms                            |
 
 To add a word, edit the right file and regenerate:
 

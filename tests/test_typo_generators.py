@@ -1,7 +1,7 @@
 """Unit tests for the typo-generator functions in generate_espanso."""
 import pytest
-import generate_espanso as ge
 
+import generate_espanso as ge
 
 # ---------------------------------------------------------------------------
 # generate_transpositions

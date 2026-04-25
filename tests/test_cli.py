@@ -2,8 +2,9 @@
 import os
 import subprocess
 import sys
-import yaml
+
 import pytest
+import yaml
 
 SCRIPT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "generate_espanso.py")
 REPO_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

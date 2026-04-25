@@ -1,6 +1,8 @@
 """Shared fixtures for the Refuos test suite."""
 import os
+
 import pytest
+
 import generate_espanso
 
 
