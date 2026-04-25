@@ -49,7 +49,8 @@ else
 fi
 
 # Verify Espanso version >= 2.0
-ESPANSO_VERSION="$(espanso --version 2>&1 | grep -oE '[0-9]+\.[0-9]+' | head -1)"
+ESPANSO_VERSION="$(espanso --version 2>&1 || true)" # some builds exit non-zero
+ESPANSO_VERSION="$(echo "$ESPANSO_VERSION" | grep -oE '[0-9]+\.[0-9]+' | head -1)"
 ESPANSO_MAJOR="$(echo "$ESPANSO_VERSION" | cut -d. -f1)"
 if [ -z "$ESPANSO_MAJOR" ] || [ "$ESPANSO_MAJOR" -lt 2 ]; then
     echo "Error: Espanso 2.0 or later is required (found: ${ESPANSO_VERSION:-unknown})."
