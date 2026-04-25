@@ -196,22 +196,6 @@ def generate_accenti_pack():
         ACCENTI_WORDS, "Accenti",
         "Missing accents, future tense verbs, -ità nouns"
     )
-    regex_lines = [
-        "  # REGEX — Accent catch-all patterns",
-    ]
-    for pattern, repl, comment in [
-        ("(?P<stem>[a-z]{6,})ero$", "{{stem}}erò", "Future 1st person -erò"),
-        ("(?P<stem>[a-z]{6,})era$", "{{stem}}erà", "Future 3rd person -erà"),
-        ("(?P<stem>[a-z]{6,})iro$", "{{stem}}irò", "Future 1st person -irò"),
-        ("(?P<stem>[a-z]{6,})ira$", "{{stem}}irà", "Future 3rd person -irà"),
-        ("(?P<stem>[a-z]{8,})ita$", "{{stem}}ità", "Nouns in -ità"),
-    ]:
-        regex_lines.append(f"  # {comment}")
-        regex_lines.append(f"  - regex: {esc(pattern)}")
-        regex_lines.append(f"    replace: {esc(repl)}")
-        regex_lines.append("    word: true")
-        regex_lines.append("")
-        total += 1
     short_lines = [
         "  # Short accented words (too short for the auto-generator)",
     ]
@@ -226,7 +210,7 @@ def generate_accenti_pack():
         short_lines.append("    word: true")
         short_lines.append("")
         total += 1
-    return content + '\n' + '\n'.join(regex_lines) + '\n' + '\n'.join(short_lines), total
+    return content + '\n' + '\n'.join(short_lines), total
 
 
 def generate_dev_pack():
@@ -408,7 +392,7 @@ PACKAGE_META = {
             | `aggiungero`  | `aggiungerò`   |
             | `disponibilita` | `disponibilità` |
 
-            ~4,700 rules plus regex catch-all patterns.
+            ~4,700 rules.
 
             ## Source
 

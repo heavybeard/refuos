@@ -41,9 +41,8 @@ class TestGeneratePack:
         content, _ = ge.generate_pack(["anche", "bello"], "Test", "Test pack")
         doc = _parse(content)
         for match in doc["matches"]:
-            # match is either a trigger-based or regex-based rule
-            has_trigger = "trigger" in match or "regex" in match
-            assert has_trigger, f"Match missing trigger/regex: {match}"
+            # every match must have a trigger
+            assert "trigger" in match, f"Match missing trigger: {match}"
             assert "replace" in match, f"Match missing replace: {match}"
             assert match.get("word") is True, f"Match missing word:true: {match}"
 
@@ -98,23 +97,13 @@ class TestGenerateAccentiPack:
         content, total = ge.generate_accenti_pack()
         assert total > 0
 
-    def test_contains_regex_rules(self):
+    def test_no_regex_rules(self):
         content, _ = ge.generate_accenti_pack()
-        assert "regex:" in content
+        assert "regex:" not in content
 
     def test_contains_trigger_rules(self):
         content, _ = ge.generate_accenti_pack()
         assert "trigger:" in content
-
-    def test_future_tense_regex_patterns_present(self):
-        content, _ = ge.generate_accenti_pack()
-        # At least the -erò and -erà catch-all patterns must appear
-        assert "erò" in content
-        assert "erà" in content
-
-    def test_ita_regex_pattern_present(self):
-        content, _ = ge.generate_accenti_pack()
-        assert "ità" in content
 
     def test_hardcoded_short_word_rules_present(self):
         content, _ = ge.generate_accenti_pack()
@@ -123,8 +112,8 @@ class TestGenerateAccentiPack:
 
     def test_hardcoded_rules_included_in_total(self):
         _, total = ge.generate_accenti_pack()
-        # 5 regex rules + 8 hardcoded short-word rules = 13 minimum
-        assert total >= 13
+        # 8 hardcoded short-word rules = 8 minimum
+        assert total >= 8
 
 
 # ---------------------------------------------------------------------------

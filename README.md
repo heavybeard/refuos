@@ -16,7 +16,7 @@ Refuos uses [Espanso](https://espanso.org), a free open-source text expander tha
 
 A Python generator reads words from the included dictionaries and automatically produces all plausible typo variants: adjacent-key transpositions, missing double letters, wrong accents, dropped characters. The output is a set of YAML files that Espanso loads and uses to correct text in real time.
 
-Regex catch-all rules are also included for patterns that can't be enumerated (future-tense verbs, nouns ending in `-ità`).
+Future-tense verbs and nouns ending in `-ità` are covered by explicit entries in the accent dictionary.
 
 ## Examples
 
