@@ -4,7 +4,7 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![Validate](https://github.com/heavybeard/refuos/actions/workflows/validate.yml/badge.svg)](https://github.com/heavybeard/refuos/actions/workflows/validate.yml)
 [![Release](https://github.com/heavybeard/refuos/actions/workflows/release.yml/badge.svg)](https://github.com/heavybeard/refuos/releases/latest)
-[![Rules](https://img.shields.io/badge/rules-8%2C000%2B-blue)](#packages)
+[![Rules](https://img.shields.io/badge/rules-10%2C500%2B-blue)](#packages)
 
 _refuos_ - how you'd type "refuso" (typo) in a hurry. And that's exactly the problem it solves.
 
@@ -29,7 +29,7 @@ Future-tense verbs and nouns ending in `-ità` are covered by explicit entries i
 | `cosnt`      | `const`       |
 | `reutrn`     | `return`      |
 
-**8,000+ rules** in total, zero latency, fully offline.
+**10,500+ rules** in total, zero latency, fully offline.
 
 ## Packages
 
@@ -37,66 +37,30 @@ Three independent files. Install all of them or only the ones you need.
 
 | Package      | File                  | Rules  | What it fixes                                                       |
 | ------------ | --------------------- | ------ | ------------------------------------------------------------------- |
-| **Italiano** | `refuos-italiano.yml` | ~2,500 | Everyday words: `acnhe` -> anche, `comunqeu` -> comunque            |
-| **Accenti**  | `refuos-accenti.yml`  | ~4,700 | Accents & futures: `perche` -> perche', `aggiungero` -> aggiungero' |
-| **Dev**      | `refuos-dev.yml`      | ~1,100 | Tech terms: `cosnt` -> const, `reutrn` -> return                    |
+| **Italiano** | `refuos-italiano.yml` | ~2,600 | Everyday words: `acnhe` -> anche, `comunqeu` -> comunque            |
+| **Accenti**  | `refuos-accenti.yml`  | ~4,800 | Accents & futures: `perche` -> perche', `aggiungero` -> aggiungero' |
+| **Dev**      | `refuos-dev.yml`      | ~3,200 | Tech terms: `cosnt` -> const, `reutrn` -> return                    |
 
 To remove a package, simply delete the corresponding `.yml` file from the Espanso folder.
 
 ## Installation
 
-Three methods, from simplest to most technical. Pick the one that fits you.
-
-### Method 1 — Espanso Hub (recommended, no terminal needed)
-
-> Available once the package is approved on the Espanso Hub.
-
-Install [Espanso](https://espanso.org) from its website (standard graphical installer), then run:
-
-```bash
-espanso install refuos-italiano
-espanso install refuos-accenti
-espanso install refuos-dev
-```
-
-Or search for `refuos` directly inside the Espanso GUI.
-
-### Method 2 — Download ZIP (no terminal needed)
+> **Espanso Hub support coming soon.** Once approved, a single `espanso install refuos-italiano` will be enough. In the meantime, the commands below work identically.
 
 1. Install [Espanso](https://espanso.org) from its website
-2. Download **[refuos-rules.zip](https://github.com/heavybeard/refuos/releases/latest/download/refuos-rules.zip)** from the latest release
-3. Open the Espanso config folder:
-   - **macOS / Linux:** in the Espanso menu choose _Open config folder_, or navigate to `~/Library/Application Support/espanso` (macOS) / `~/.config/espanso` (Linux)
-   - **Windows:** in the Espanso tray icon choose _Open config folder_, or navigate to `%APPDATA%\espanso`
-4. Copy the three `.yml` files into the `match/` subfolder
-5. Restart Espanso
-
-To install only specific packages, download the individual files instead:
-[`refuos-italiano.yml`](https://github.com/heavybeard/refuos/releases/latest/download/refuos-italiano.yml) &middot;
-[`refuos-accenti.yml`](https://github.com/heavybeard/refuos/releases/latest/download/refuos-accenti.yml) &middot;
-[`refuos-dev.yml`](https://github.com/heavybeard/refuos/releases/latest/download/refuos-dev.yml)
-
-### Method 3 — One-liner (terminal)
-
-**macOS** (installs Espanso via Homebrew if needed):
+2. Run:
 
 ```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/heavybeard/refuos/main/install.sh)"
+espanso install refuos-italiano --git https://github.com/heavybeard/refuos --git-branch pkg/refuos-italiano --external
+espanso install refuos-accenti  --git https://github.com/heavybeard/refuos --git-branch pkg/refuos-accenti  --external
+espanso install refuos-dev      --git https://github.com/heavybeard/refuos --git-branch pkg/refuos-dev      --external
 ```
 
-**Linux** (requires Espanso already installed):
+3. Restart Espanso if it doesn't pick up the new rules automatically.
 
-```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/heavybeard/refuos/main/install.sh)"
-```
+To install only specific packages, just run the corresponding command above.
 
-**Windows** — PowerShell (installs Espanso via `winget` if needed):
-
-```powershell
-irm https://raw.githubusercontent.com/heavybeard/refuos/main/install.ps1 | iex
-```
-
-The scripts download the pre-built rules directly from the latest release — no Python or Git required.
+For alternative methods (ZIP download, one-liner scripts for macOS, Linux and Windows) see [INSTALL.md](INSTALL.md).
 
 ## Adding words
 
@@ -107,6 +71,8 @@ Words live in plain text files inside the `dictionaries/` folder — one word pe
 | `dictionaries/italiano.txt` | Everyday Italian words                         |
 | `dictionaries/accenti.txt`  | Accented words, future-tense verbs, -ità nouns |
 | `dictionaries/dev.txt`      | Tech and code terms                            |
+
+For personal or stack-specific words that you don't want to submit upstream, use `dictionaries/local/` — any `.txt` file placed there generates a private `refuos-local-<name>.yml` package that is gitignored and excluded from releases. See [`dictionaries/local/README.md`](dictionaries/local/README.md) for details.
 
 To add a word, edit the right file and regenerate:
 
@@ -123,7 +89,7 @@ Or [open an issue](https://github.com/heavybeard/refuos/issues/new/choose) — t
 
 Re-run whichever installation method you used:
 
-- **Espanso Hub:** `espanso update`
+- **espanso install --git:** `espanso update` (or re-run the same `espanso install ... --external` commands)
 - **ZIP / individual files:** download the new files from [Releases](https://github.com/heavybeard/refuos/releases/latest) and replace the old ones
 - **One-liner:** re-run the same curl/PowerShell command
 
@@ -159,7 +125,6 @@ Some ideas under consideration:
 
 - Additional language dictionaries (Spanish, French, ...)
 - Domain-specific word lists (medical, legal, academic, ...)
-- A `--dry-run` mode that prints stats without writing files
 
 ## Support
 
