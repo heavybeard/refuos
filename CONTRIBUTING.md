@@ -37,6 +37,8 @@ This is the most common contribution and requires no coding.
 
 > **Not sure which file to edit?** Just pick the closest one and mention it in the PR — the maintainer will move it if needed.
 
+> **Want to keep a word private?** Place it in a file under `dictionaries/local/` instead. Local files are gitignored and generate a private package (`refuos-local-<name>.yml`) that is never included in releases. See [`dictionaries/local/README.md`](dictionaries/local/README.md) for details.
+
 ---
 
 ## Propose a new dictionary
@@ -78,11 +80,17 @@ Open a **Feature request** issue. Describe the problem you're trying to solve, n
 git clone https://github.com/heavybeard/refuos.git
 cd refuos
 
+# Install dev dependencies
+pip install -r requirements-dev.txt
+
 # Edit a dictionary
 nano dictionaries/italiano.txt
 
 # Validate (no Espanso needed)
 python3 generate_espanso.py --check
+
+# Run the test suite
+pytest tests/ -v
 
 # Generate to a temp dir for inspection
 python3 generate_espanso.py --output-dir /tmp/refuos-out
@@ -92,7 +100,7 @@ python3 generate_espanso.py
 espanso restart
 ```
 
-**Requirements:** Python 3.9+. No external dependencies.
+**Requirements:** Python 3.9+. **Dev dependencies:** `pip install -r requirements-dev.txt`
 
 ---
 
