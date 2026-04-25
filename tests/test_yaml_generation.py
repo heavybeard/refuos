@@ -1,5 +1,6 @@
 """Tests for YAML generation functions in generate_espanso."""
 import yaml
+
 import generate_espanso as ge
 
 ACCENTED_CHARS = set("àèéìòù")
@@ -114,6 +115,16 @@ class TestGenerateAccentiPack:
     def test_ita_regex_pattern_present(self):
         content, _ = ge.generate_accenti_pack()
         assert "ità" in content
+
+    def test_hardcoded_short_word_rules_present(self):
+        content, _ = ge.generate_accenti_pack()
+        for trigger in ("e'", "e1", "si'", "si1", "la'", "la1", "li'", "li1"):
+            assert trigger in content, f"Missing hardcoded trigger: {trigger!r}"
+
+    def test_hardcoded_rules_included_in_total(self):
+        _, total = ge.generate_accenti_pack()
+        # 5 regex rules + 8 hardcoded short-word rules = 13 minimum
+        assert total >= 13
 
 
 # ---------------------------------------------------------------------------

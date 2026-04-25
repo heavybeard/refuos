@@ -39,8 +39,8 @@ QWERTY_NEIGHBORS = {
     'v': 'cfgb', 'b': 'vghn', 'n': 'bhjm', 'm': 'njk',
 }
 ACCENT_REPLACE_MAP = {
-    'à': ['a', "a'"], 'è': ['e', "e'", 'e1'], 'é': ['e', "e'", 'e1'],
-    'ì': ['i', "i'"], 'ò': ['o', "o'"], 'ù': ['u', "u'"],
+    'à': ['a', "a'", 'a1'], 'è': ['e', "e'", 'e1'], 'é': ['e', "e'", 'e1'],
+    'ì': ['i', "i'", 'i1'], 'ò': ['o', "o'", 'o1'], 'ù': ['u', "u'", 'u1'],
 }
 
 REPO_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -212,7 +212,21 @@ def generate_accenti_pack():
         regex_lines.append("    word: true")
         regex_lines.append("")
         total += 1
-    return content + '\n' + '\n'.join(regex_lines), total
+    short_lines = [
+        "  # Short accented words (too short for the auto-generator)",
+    ]
+    for trigger, replace in [
+        ("e'", "è"), ("e1", "è"),
+        ("si'", "sì"), ("si1", "sì"),
+        ("la'", "là"), ("la1", "là"),
+        ("li'", "lì"), ("li1", "lì"),
+    ]:
+        short_lines.append(f"  - trigger: {esc(trigger)}")
+        short_lines.append(f"    replace: {esc(replace)}")
+        short_lines.append("    word: true")
+        short_lines.append("")
+        total += 1
+    return content + '\n' + '\n'.join(regex_lines) + '\n' + '\n'.join(short_lines), total
 
 
 def generate_dev_pack():
