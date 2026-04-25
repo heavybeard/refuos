@@ -4,7 +4,7 @@
 # To add a word: add it here (one per line) and open a PR.
 
 affinché
-aggionerai
+aggiornerai
 aggiorneranno
 aggiorneremo
 aggiornerà
@@ -53,7 +53,6 @@ capiranno
 capiremo
 capirà
 capirò
-certamente
 chiamerai
 chiameranno
 chiameremo
@@ -167,8 +166,6 @@ leggerà
 leggerò
 libertà
 lunedì
-là
-lì
 manderai
 manderanno
 manderemo
@@ -187,7 +184,6 @@ metteremo
 metterà
 metterò
 necessità
-nonostante
 organizzerai
 organizzeranno
 organizzeremo
@@ -227,7 +223,6 @@ prepareranno
 prepareremo
 preparerà
 preparerò
-probabilmente
 proverai
 proveranno
 proveremo
@@ -284,15 +279,12 @@ scriveranno
 scriveremo
 scriverà
 scriverò
-sebbene
 sensibilità
 sentirai
 sentiranno
 sentiremo
 sentirà
 sentirò
-sicuramente
-sicuro
 spiegherai
 spiegheranno
 spiegheremo
@@ -303,7 +295,6 @@ staranno
 staremo
 starà
 starò
-sì
 terrai
 terranno
 terremo
@@ -331,8 +322,6 @@ vedranno
 vedremo
 vedrà
 vedrò
-veloce
-velocemente
 venerdì
 verificherai
 verificheranno
@@ -350,4 +339,3 @@ vorremo
 vorrà
 vorrò
 vulnerabilità
-è
