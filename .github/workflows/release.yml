@@ -59,6 +59,26 @@ jobs:
       - name: Generate Espanso Hub packages
         run: python3 generate_espanso.py --espanso-packages espanso-packages/
 
+      - name: Publish package branches (pkg/*)
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          ORIG_HEAD=$(git rev-parse HEAD)
+          for pkg in refuos-italiano refuos-accenti refuos-dev; do
+            branch="pkg/$pkg"
+            tmpdir=$(mktemp -d)
+            cp -r "espanso-packages/$pkg/." "$tmpdir/"
+            git checkout --orphan "$branch"
+            git rm -rf . --quiet
+            cp -r "$tmpdir/." .
+            rm -rf "$tmpdir"
+            git add -A
+            git commit -m "chore: update packages for ${{ github.ref_name }}"
+            git push origin "HEAD:$branch" --force
+            git checkout "$ORIG_HEAD" --quiet
+            git branch -D "$branch" 2>/dev/null || true
+          done
+
       - name: Print rule counts
         run: |
           python3 - <<'EOF'
