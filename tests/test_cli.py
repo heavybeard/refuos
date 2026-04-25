@@ -6,6 +6,7 @@ import yaml
 import pytest
 
 SCRIPT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "generate_espanso.py")
+REPO_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 EXPECTED_PACKAGES = ["refuos-italiano", "refuos-accenti", "refuos-dev"]
 EXPECTED_YMLS = [f"{p}.yml" for p in EXPECTED_PACKAGES]
 MANIFEST_REQUIRED_KEYS = {"name", "title", "description", "version", "author", "tags"}
@@ -68,10 +69,90 @@ class TestOutputDir:
         _run("--output-dir", str(tmp_path))
         assert not legacy.exists(), "Legacy file was not removed"
 
-    def test_no_extra_yml_files_created(self, tmp_path):
+    def test_no_extra_public_yml_files_created_without_locals(self, tmp_path):
+        """Without local dicts, only the three public YMLs should be written."""
+        local_dir = os.path.join(REPO_DIR, "dictionaries", "local")
+        local_txts = (
+            [f for f in os.listdir(local_dir) if f.endswith(".txt")]
+            if os.path.isdir(local_dir) else []
+        )
+        if local_txts:
+            pytest.skip("Local dictionaries present — exact file count test not applicable")
         _run("--output-dir", str(tmp_path))
         yml_files = sorted(p.name for p in tmp_path.glob("*.yml"))
         assert yml_files == sorted(EXPECTED_YMLS), f"Unexpected files: {yml_files}"
+
+
+# ---------------------------------------------------------------------------
+# Local dictionaries
+# ---------------------------------------------------------------------------
+
+class TestLocalDictionaries:
+    def _write_local_dict(self, repo_local_dir, name, content):
+        """Write a temporary local .txt file for integration tests."""
+        os.makedirs(repo_local_dir, exist_ok=True)
+        path = os.path.join(repo_local_dir, name)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(content)
+        return path
+
+    # Words used only in these integration tests: chosen to not appear in any
+    # real dictionary (public or local). If validation fails, they may have
+    # been added to a dictionary; replace them with other unused tech terms.
+    _TEST_WORDS = "# test local dict\nastrojs\nsolidjs\nqwikdev\n"
+
+    def test_local_dict_generates_local_yml(self, tmp_path, tmp_path_factory):
+        """A local .txt file produces a refuos-local-<name>.yml in --output-dir."""
+        local_dir = os.path.join(REPO_DIR, "dictionaries", "local")
+        local_file = os.path.join(local_dir, "_test_integration.txt")
+        os.makedirs(local_dir, exist_ok=True)
+        try:
+            with open(local_file, "w", encoding="utf-8") as f:
+                f.write(self._TEST_WORDS)
+            result = _run("--output-dir", str(tmp_path))
+            assert result.returncode == 0, f"Failed:\n{result.stdout}\n{result.stderr}"
+            expected = tmp_path / "refuos-local-_test_integration.yml"
+            assert expected.exists(), f"Missing local yml: {expected.name}"
+        finally:
+            if os.path.exists(local_file):
+                os.remove(local_file)
+
+    def test_local_yml_is_valid_yaml(self, tmp_path):
+        """The generated local yml must be valid YAML with a matches list."""
+        local_dir = os.path.join(REPO_DIR, "dictionaries", "local")
+        local_file = os.path.join(local_dir, "_test_valid.txt")
+        os.makedirs(local_dir, exist_ok=True)
+        try:
+            with open(local_file, "w", encoding="utf-8") as f:
+                f.write(self._TEST_WORDS)
+            _run("--output-dir", str(tmp_path))
+            yml_path = tmp_path / "refuos-local-_test_valid.yml"
+            if not yml_path.exists():
+                pytest.skip("Local yml not generated (possibly 0 typos produced)")
+            with open(yml_path, encoding="utf-8") as f:
+                doc = yaml.safe_load(f)
+            assert "matches" in doc
+        finally:
+            if os.path.exists(local_file):
+                os.remove(local_file)
+
+    def test_espanso_packages_excludes_local_dicts(self, tmp_path):
+        """--espanso-packages must only produce the three public packages."""
+        local_dir = os.path.join(REPO_DIR, "dictionaries", "local")
+        local_file = os.path.join(local_dir, "_test_hub.txt")
+        os.makedirs(local_dir, exist_ok=True)
+        try:
+            with open(local_file, "w", encoding="utf-8") as f:
+                f.write(self._TEST_WORDS)
+            result = _run("--espanso-packages", str(tmp_path))
+            assert result.returncode == 0, f"Failed:\n{result.stdout}\n{result.stderr}"
+            top_dirs = {d.name for d in tmp_path.iterdir() if d.is_dir()}
+            assert top_dirs == set(EXPECTED_PACKAGES), (
+                f"Unexpected dirs in espanso-packages output: {top_dirs}"
+            )
+        finally:
+            if os.path.exists(local_file):
+                os.remove(local_file)
 
 
 # ---------------------------------------------------------------------------

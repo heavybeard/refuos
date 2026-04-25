@@ -8,3 +8,4 @@ build/
 espanso-packages/
 .env
 .env.*
+dictionaries/local/*.txt

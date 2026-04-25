@@ -11,16 +11,30 @@ def tmp_dict_dir(tmp_path, monkeypatch):
     patches generate_espanso.DICT_DIR to point there, so load_words reads
     from the temp files instead of the real dictionaries/ folder.
 
+    Supports subdirectories: use a key like "local/foo.txt" to create
+    files under tmp_path/local/.
+
     Usage:
         def test_something(tmp_dict_dir):
             tmp_dict_dir({"italiano.txt": "ciao\nbello\n"})
             words = generate_espanso.load_words("italiano.txt")
+
+        def test_local(tmp_dict_dir):
+            tmp_dict_dir({
+                "italiano.txt": "ciao\n",
+                "accenti.txt": "",
+                "dev.txt": "",
+                "local/react.txt": "useState\nuseEffect\n",
+            })
+            local = generate_espanso.load_local_dictionaries()
     """
     monkeypatch.setattr(generate_espanso, "DICT_DIR", str(tmp_path))
 
     def _write(files: dict[str, str]):
         for name, content in files.items():
-            (tmp_path / name).write_text(content, encoding="utf-8")
+            target = tmp_path / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(content, encoding="utf-8")
 
     return _write
 

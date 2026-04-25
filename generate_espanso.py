@@ -6,7 +6,11 @@ https://github.com/heavybeard/refuos
 Generates modular YAML files for Espanso. Each package is independent:
   - refuos-italiano.yml  -> everyday Italian words
   - refuos-accenti.yml   -> accents, future-tense verbs, -ita' nouns
-  - refuos-dev.yml       -> tech/code terms
+  - refuos-dev.yml       -> tech/code terms (cross-stack, framework-agnostic)
+
+Private local dictionaries are also supported. Any .txt file placed in
+dictionaries/local/ generates a private refuos-local-<name>.yml package.
+Local files are gitignored and excluded from --espanso-packages output.
 
 Words are loaded from the dictionaries/ folder. To add a word, edit the
 corresponding .txt file and re-run this script.
@@ -53,11 +57,40 @@ def load_words(filename: str) -> list[str]:
         return [line.strip() for line in f if line.strip() and not line.startswith("#")]
 
 
+def load_local_dictionaries() -> dict[str, list[str]]:
+    """
+    Scan dictionaries/local/ for *.txt files and return a dict mapping
+    the stem name (without .txt) to the list of words.
+
+    Returns an empty dict if the folder does not exist or contains no .txt files.
+    Resolves LOCAL_DIR at call time so that tests can patch DICT_DIR.
+    """
+    local_dir = os.path.join(DICT_DIR, "local")
+    if not os.path.isdir(local_dir):
+        return {}
+    result = {}
+    for entry in sorted(os.listdir(local_dir)):
+        if not entry.endswith(".txt"):
+            continue
+        name = entry[:-4]  # strip .txt
+        path = os.path.join(local_dir, entry)
+        with open(path, encoding="utf-8") as f:
+            words = [line.strip() for line in f if line.strip() and not line.startswith("#")]
+        result[name] = words
+    return result
+
+
 ITALIANO_WORDS = load_words("italiano.txt")
 ACCENTI_WORDS = load_words("accenti.txt")
 DEV_WORDS = load_words("dev.txt")
+LOCAL_DICTS: dict[str, list[str]] = load_local_dictionaries()
 
-ALL_WORDS = set(ITALIANO_WORDS) | set(ACCENTI_WORDS) | set(DEV_WORDS)
+ALL_WORDS = (
+    set(ITALIANO_WORDS)
+    | set(ACCENTI_WORDS)
+    | set(DEV_WORDS)
+    | {w for words in LOCAL_DICTS.values() for w in words}
+)
 
 
 # ===================================================================
@@ -185,8 +218,19 @@ def generate_accenti_pack():
 def generate_dev_pack():
     content, total = generate_pack(
         DEV_WORDS, "Dev",
-        "Tech and code terms (JS, React, CSS, Git...)",
+        "Tech and code terms: HTML, CSS, patterns, paradigms, Git, DevOps, Python and more",
         include_accents=False
+    )
+    return content, total
+
+
+def generate_local_pack(name: str, words: list[str]):
+    """Generate a private local pack for a given local dictionary."""
+    content, total = generate_pack(
+        words,
+        f"Local – {name}",
+        f"Private local dictionary: {name}",
+        include_accents=False,
     )
     return content, total
 
@@ -198,7 +242,7 @@ def validate_dictionaries() -> list[str]:
     """Return a list of error messages (empty means OK)."""
     errors = []
 
-    # Check for duplicates within each file
+    # Check for duplicates within each public file
     for fname in ("italiano.txt", "accenti.txt", "dev.txt"):
         words = load_words(fname)
         seen: set[str] = set()
@@ -207,19 +251,42 @@ def validate_dictionaries() -> list[str]:
                 errors.append(f"Duplicate in {fname}: '{w}'")
             seen.add(w)
 
-    # Check for words that appear in multiple packs (warn only, not an error)
+    # Check for overlaps between public files
     it = set(load_words("italiano.txt"))
     acc = set(load_words("accenti.txt"))
     dev = set(load_words("dev.txt"))
-    overlap_it_acc = it & acc
-    overlap_it_dev = it & dev
-    overlap_acc_dev = acc & dev
-    for w in sorted(overlap_it_acc):
+    for w in sorted(it & acc):
         errors.append(f"Word appears in both italiano.txt and accenti.txt: '{w}'")
-    for w in sorted(overlap_it_dev):
+    for w in sorted(it & dev):
         errors.append(f"Word appears in both italiano.txt and dev.txt: '{w}'")
-    for w in sorted(overlap_acc_dev):
+    for w in sorted(acc & dev):
         errors.append(f"Word appears in both accenti.txt and dev.txt: '{w}'")
+
+    # Validate local dictionaries
+    local = load_local_dictionaries()
+    public_all = it | acc | dev
+    local_names = sorted(local.keys())
+
+    for name, words in local.items():
+        fname = f"local/{name}.txt"
+        seen_local: set[str] = set()
+        for w in words:
+            # Duplicates within the same local file
+            if w in seen_local:
+                errors.append(f"Duplicate in {fname}: '{w}'")
+            seen_local.add(w)
+            # Overlap with any public dictionary
+            if w in public_all:
+                errors.append(f"Word in {fname} already exists in a public dictionary: '{w}'")
+
+    # Overlap between local files
+    for i, name_a in enumerate(local_names):
+        for name_b in local_names[i + 1:]:
+            overlap = set(local[name_a]) & set(local[name_b])
+            for w in sorted(overlap):
+                errors.append(
+                    f"Word appears in both local/{name_a}.txt and local/{name_b}.txt: '{w}'"
+                )
 
     return errors
 
@@ -260,7 +327,7 @@ def write_pack(match_dir, filename, content, total):
     with open(path, 'w', encoding='utf-8') as f:
         f.write(content)
     size = os.path.getsize(path) / 1024
-    print(f"  ok  {filename:<25} {total:>5,} rules  ({size:.0f} KB)")
+    print(f"  ok  {filename:<35} {total:>5,} rules  ({size:.0f} KB)")
     return total
 
 
@@ -336,8 +403,8 @@ PACKAGE_META = {
     },
     "refuos-dev": {
         "title": "Refuos Dev",
-        "description": "Autocorrection for tech and code terms: JS, React, CSS, Git and more. Fixes cosnt→const, reutrn→return.",
-        "tags": ["dev", "autocorrect", "code", "javascript", "react", "git"],
+        "description": "Autocorrection for tech and code terms: HTML, CSS, patterns, paradigms, Git, DevOps, Python and more. Fixes cosnt→const, reutrn→return.",
+        "tags": ["dev", "autocorrect", "code", "html", "css", "git", "devops", "python", "patterns", "architecture"],
         "readme": textwrap.dedent("""\
             # Refuos Dev
 
@@ -345,15 +412,22 @@ PACKAGE_META = {
 
             ## What it fixes
 
-            Common typos in JavaScript, React, CSS, Git keywords and more — for example:
+            Common typos in language keywords, HTML, CSS, design patterns, paradigms,
+            Git, DevOps tools, Python, and infrastructure — for example:
 
-            | You type  | Corrected to |
-            |-----------|--------------|
-            | `cosnt`   | `const`      |
-            | `reutrn`  | `return`     |
-            | `ipmort`  | `import`     |
+            | You type       | Corrected to   |
+            |----------------|----------------|
+            | `cosnt`        | `const`        |
+            | `reutrn`       | `return`       |
+            | `ipmort`       | `import`       |
+            | `dockerfiel`   | `dockerfile`   |
+            | `migraiton`    | `migration`    |
+            | `Kuberentes`   | `Kubernetes`   |
 
-            ~1,100 rules in total.
+            Framework-agnostic: works for JavaScript, TypeScript, Python, Go, Java,
+            and any other stack. For framework-specific terms (React hooks, Vue
+            Composition API, NestJS decorators, Django ORM, etc.) use a local
+            dictionary — see `dictionaries/local/README.md`.
 
             ## Source
 
@@ -393,7 +467,7 @@ def write_espanso_packages(base_dir: str, packs: list[tuple[str, str, int]], ver
         with open(os.path.join(pkg_dir, "README.md"), "w", encoding="utf-8") as f:
             f.write(meta["readme"])
 
-        print(f"  ok  {pkg_name:<25} {total:>5,} rules  -> {pkg_dir}")
+        print(f"  ok  {pkg_name:<35} {total:>5,} rules  -> {pkg_dir}")
 
 
 def parse_args():
@@ -441,21 +515,22 @@ if __name__ == "__main__":
     )
     acc_content, acc_total = generate_accenti_pack()
     dev_content, dev_total = generate_dev_pack()
-    grand_total = it_total + acc_total + dev_total
 
-    packs = [
+    public_packs = [
         ("refuos-italiano", it_content, it_total),
         ("refuos-accenti",  acc_content, acc_total),
         ("refuos-dev",      dev_content, dev_total),
     ]
 
-    # --- Mode: Espanso Hub package structure ---
+    # --- Mode: Espanso Hub package structure (public packs only) ---
     if args.espanso_packages:
         version = get_version()
+        grand_total = it_total + acc_total + dev_total
         print(f"  Generating Espanso Hub packages (version {version})...\n")
-        write_espanso_packages(args.espanso_packages, packs, version)
-        print(f"\n  Total: {grand_total:,} rules across {len(packs)} packages")
+        write_espanso_packages(args.espanso_packages, public_packs, version)
+        print(f"\n  Total: {grand_total:,} rules across {len(public_packs)} packages")
         print(f"  Package dir: {os.path.abspath(args.espanso_packages)}")
+        print(f"\n  Note: local dictionaries are excluded from Hub packages.")
         raise SystemExit(0)
 
     # --- Mode: write YAML files (default or --output-dir) ---
@@ -482,6 +557,18 @@ if __name__ == "__main__":
     write_pack(match_dir, "refuos-accenti.yml",  acc_content, acc_total)
     write_pack(match_dir, "refuos-dev.yml",      dev_content, dev_total)
 
-    print(f"\n  Total: {grand_total:,} rules across 3 packages")
+    grand_total = it_total + acc_total + dev_total
+
+    # Generate local packs
+    if LOCAL_DICTS:
+        print()
+        for name, words in sorted(LOCAL_DICTS.items()):
+            local_content, local_total = generate_local_pack(name, words)
+            filename = f"refuos-local-{name}.yml"
+            write_pack(match_dir, filename, local_content, local_total)
+            grand_total += local_total
+
+    total_packs = len(public_packs) + len(LOCAL_DICTS)
+    print(f"\n  Total: {grand_total:,} rules across {total_packs} packages")
     print(f"\n  Restart Espanso: espanso restart")
     print(f"  To remove a package: delete the corresponding .yml file")
