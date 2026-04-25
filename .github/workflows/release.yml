@@ -63,17 +63,19 @@ jobs:
         run: |
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
-          # Save all packages outside the working tree before the loop.
-          # git rm + git clean inside the loop destroys untracked directories
-          # (build/, espanso-packages/, refuos-rules.zip), so we must preserve
-          # each package's content in /tmp before the first iteration touches them.
-          all_pkgs_tmp=$(mktemp -d)
-          cp -r espanso-packages/. "$all_pkgs_tmp/"
+          # git clean -fdx inside the loop removes all untracked files, including
+          # espanso-packages/, build/ and refuos-rules.zip, which are needed both
+          # between iterations and by the steps that follow. Save everything first
+          # and restore afterward.
+          saved_tmp=$(mktemp -d)
+          cp -r espanso-packages/. "$saved_tmp/espanso-packages/"
+          cp -r build/.             "$saved_tmp/build/"
+          cp refuos-rules.zip       "$saved_tmp/"
           ORIG_HEAD=$(git rev-parse HEAD)
           for pkg in refuos-italiano refuos-accenti refuos-dev; do
             branch="pkg/$pkg"
             tmpdir=$(mktemp -d)
-            cp -r "$all_pkgs_tmp/$pkg/." "$tmpdir/"
+            cp -r "$saved_tmp/espanso-packages/$pkg/." "$tmpdir/"
             git checkout --orphan "$branch"
             git rm -rf . --quiet
             git clean -fdx --quiet
@@ -85,7 +87,10 @@ jobs:
             git checkout "$ORIG_HEAD" --quiet
             git branch -D "$branch" 2>/dev/null || true
           done
-          rm -rf "$all_pkgs_tmp"
+          cp -r "$saved_tmp/espanso-packages/." espanso-packages/
+          cp -r "$saved_tmp/build/."            build/
+          cp    "$saved_tmp/refuos-rules.zip"   .
+          rm -rf "$saved_tmp"
 
       - name: Print rule counts
         run: |
