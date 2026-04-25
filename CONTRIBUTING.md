@@ -36,7 +36,6 @@ This is the most common contribution and requires no coding.
 5. Open a Pull Request. The CI will run the same validation automatically.
 
 > **Not sure which file to edit?** Just pick the closest one and mention it in the PR — the maintainer will move it if needed.
-
 > **Want to keep a word private?** Place it in a file under `dictionaries/local/` instead. Local files are gitignored and generate a private package (`refuos-local-<name>.yml`) that is never included in releases. See [`dictionaries/local/README.md`](dictionaries/local/README.md) for details.
 
 ---
