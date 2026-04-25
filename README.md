@@ -50,11 +50,11 @@ To remove a package, simply delete the corresponding `.yml` file from the Espans
 1. Install [Espanso](https://espanso.org) from its website
 2. Run:
 
-```bash
-espanso install refuos-italiano --git https://github.com/heavybeard/refuos --git-branch pkg/refuos-italiano --external
-espanso install refuos-accenti  --git https://github.com/heavybeard/refuos --git-branch pkg/refuos-accenti  --external
-espanso install refuos-dev      --git https://github.com/heavybeard/refuos --git-branch pkg/refuos-dev      --external
-```
+   ```bash
+   espanso install refuos-italiano --git https://github.com/heavybeard/refuos --git-branch pkg/refuos-italiano --external
+   espanso install refuos-accenti  --git https://github.com/heavybeard/refuos --git-branch pkg/refuos-accenti  --external
+   espanso install refuos-dev      --git https://github.com/heavybeard/refuos --git-branch pkg/refuos-dev      --external
+   ```
 
 3. Restart Espanso if it doesn't pick up the new rules automatically.
 
