@@ -7,6 +7,12 @@ REPO="heavybeard/refuos"
 BASE_URL="https://github.com/$REPO/releases/latest/download"
 PACKAGES=(refuos-italiano.yml refuos-accenti.yml refuos-dev.yml)
 OS="$(uname -s)"
+CHECKSUM_FILE=""
+
+cleanup() {
+    [ -n "$CHECKSUM_FILE" ] && rm -f "$CHECKSUM_FILE"
+}
+trap cleanup EXIT
 
 echo ""
 echo "Refuos - Installer"
@@ -42,6 +48,15 @@ else
     echo "Espanso already installed"
 fi
 
+# Verify Espanso version >= 2.0
+ESPANSO_VERSION="$(espanso --version 2>&1 | grep -oE '[0-9]+\.[0-9]+' | head -1)"
+ESPANSO_MAJOR="$(echo "$ESPANSO_VERSION" | cut -d. -f1)"
+if [ -z "$ESPANSO_MAJOR" ] || [ "$ESPANSO_MAJOR" -lt 2 ]; then
+    echo "Error: Espanso 2.0 or later is required (found: ${ESPANSO_VERSION:-unknown})."
+    echo "Download the latest version from: https://espanso.org"
+    exit 1
+fi
+
 # 2. Find Espanso match directory
 MATCH_DIR="$(espanso path config)/match"
 mkdir -p "$MATCH_DIR"
@@ -51,7 +66,7 @@ echo "Downloading Refuos rules..."
 echo ""
 
 # Download checksums file for integrity verification
-CHECKSUM_FILE="$(mktemp)"
+CHECKSUM_FILE="$(mktemp)"  # trap cleanup EXIT will remove this on exit
 curl -fsSL "$BASE_URL/checksums.sha256" -o "$CHECKSUM_FILE"
 
 for pkg in "${PACKAGES[@]}"; do
@@ -67,13 +82,10 @@ for pkg in "${PACKAGES[@]}"; do
     if [ "$expected" != "$actual" ]; then
         echo "Error: checksum mismatch for $pkg (expected $expected, got $actual)"
         rm -f "$MATCH_DIR/$pkg"
-        rm -f "$CHECKSUM_FILE"
         exit 1
     fi
     echo "  ok  $pkg"
 done
-
-rm -f "$CHECKSUM_FILE"
 
 # 4. Restart Espanso
 espanso restart

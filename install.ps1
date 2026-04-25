@@ -33,6 +33,15 @@ if (-not (Get-Command espanso -ErrorAction SilentlyContinue)) {
     Write-Host "Espanso already installed"
 }
 
+# Verify Espanso version >= 2.0
+$EspansoVersionStr = (espanso --version 2>&1) -replace '[^0-9.]', '' | Select-Object -First 1
+$EspansoMajor = [int]($EspansoVersionStr -split '\.')[0]
+if ($EspansoMajor -lt 2) {
+    Write-Host "Error: Espanso 2.0 or later is required (found: $EspansoVersionStr)."
+    Write-Host "Download the latest version from: https://espanso.org"
+    exit 1
+}
+
 # 2. Find Espanso match directory
 $EspansoConfig = (espanso path config).Trim()
 $MatchDir = Join-Path $EspansoConfig "match"
@@ -42,29 +51,30 @@ New-Item -ItemType Directory -Force -Path $MatchDir | Out-Null
 Write-Host "Downloading Refuos rules..."
 Write-Host ""
 
-# Download checksums file for integrity verification
 $ChecksumFile = Join-Path $env:TEMP "refuos-checksums.sha256"
-Invoke-WebRequest -Uri "$BaseUrl/checksums.sha256" -OutFile $ChecksumFile -UseBasicParsing
-$ChecksumLines = Get-Content $ChecksumFile
+try {
+    # Download checksums file for integrity verification
+    Invoke-WebRequest -Uri "$BaseUrl/checksums.sha256" -OutFile $ChecksumFile -UseBasicParsing
+    $ChecksumLines = Get-Content $ChecksumFile
 
-foreach ($pkg in $Packages) {
-    $url = "$BaseUrl/$pkg"
-    $dest = Join-Path $MatchDir $pkg
-    Invoke-WebRequest -Uri $url -OutFile $dest -UseBasicParsing
+    foreach ($pkg in $Packages) {
+        $url = "$BaseUrl/$pkg"
+        $dest = Join-Path $MatchDir $pkg
+        Invoke-WebRequest -Uri $url -OutFile $dest -UseBasicParsing
 
-    # Verify integrity using SHA256
-    $actual = (Get-FileHash -Path $dest -Algorithm SHA256).Hash.ToLower()
-    $expected = ($ChecksumLines | Where-Object { $_ -match $pkg } | ForEach-Object { ($_ -split '\s+')[0] } | Select-Object -First 1)
-    if ($actual -ne $expected) {
-        Write-Host "Error: checksum mismatch for $pkg (expected $expected, got $actual)"
-        Remove-Item -Force $dest -ErrorAction SilentlyContinue
-        Remove-Item -Force $ChecksumFile -ErrorAction SilentlyContinue
-        exit 1
+        # Verify integrity using SHA256
+        $actual = (Get-FileHash -Path $dest -Algorithm SHA256).Hash.ToLower()
+        $expected = ($ChecksumLines | Where-Object { $_ -match $pkg } | ForEach-Object { ($_ -split '\s+')[0] } | Select-Object -First 1)
+        if ($actual -ne $expected) {
+            Write-Host "Error: checksum mismatch for $pkg (expected $expected, got $actual)"
+            Remove-Item -Force $dest -ErrorAction SilentlyContinue
+            exit 1
+        }
+        Write-Host "  ok  $pkg"
     }
-    Write-Host "  ok  $pkg"
+} finally {
+    Remove-Item -Force $ChecksumFile -ErrorAction SilentlyContinue
 }
-
-Remove-Item -Force $ChecksumFile -ErrorAction SilentlyContinue
 
 # 4. Restart Espanso
 espanso restart
