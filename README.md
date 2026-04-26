@@ -45,20 +45,26 @@ To remove a package, simply delete the corresponding `.yml` file from the Espans
 
 ## Installation
 
-> **Espanso Hub support coming soon.** Once approved, a single `espanso install refuos-italiano` will be enough. In the meantime, the commands below work identically.
-
 1. Install [Espanso](https://espanso.org) from its website
 2. Run:
 
    ```bash
-   espanso install refuos-italiano --git https://github.com/heavybeard/refuos --git-branch pkg/refuos-italiano --external
-   espanso install refuos-accenti  --git https://github.com/heavybeard/refuos --git-branch pkg/refuos-accenti  --external
-   espanso install refuos-dev      --git https://github.com/heavybeard/refuos --git-branch pkg/refuos-dev      --external
+   espanso install refuos-italiano
+   espanso install refuos-accenti
+   espanso install refuos-dev
    ```
 
 3. Restart Espanso if it doesn't pick up the new rules automatically.
 
 To install only specific packages, just run the corresponding command above.
+
+> **Alternative (while Hub approval is pending):** use the `--git` flag pointing directly to this repo:
+>
+> ```bash
+> espanso install refuos-italiano --git https://github.com/heavybeard/refuos --git-branch pkg/refuos-italiano --external
+> espanso install refuos-accenti  --git https://github.com/heavybeard/refuos --git-branch pkg/refuos-accenti  --external
+> espanso install refuos-dev      --git https://github.com/heavybeard/refuos --git-branch pkg/refuos-dev      --external
+> ```
 
 For alternative methods (ZIP download, one-liner scripts for macOS, Linux and Windows) see [INSTALL.md](INSTALL.md).
 
