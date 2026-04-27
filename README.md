@@ -5,6 +5,7 @@
 [![Validate](https://github.com/heavybeard/refuos/actions/workflows/validate.yml/badge.svg)](https://github.com/heavybeard/refuos/actions/workflows/validate.yml)
 [![Release](https://github.com/heavybeard/refuos/actions/workflows/release.yml/badge.svg)](https://github.com/heavybeard/refuos/releases/latest)
 [![Rules](https://img.shields.io/badge/rules-10%2C500%2B-blue)](#packages)
+[![Available on Espanso Hub](https://img.shields.io/badge/espanso_hub-available-blue)](https://hub.espanso.org/search?q=refuos)
 
 _refuos_ - how you'd type "refuso" (typo) in a hurry. And that's exactly the problem it solves.
 
@@ -58,7 +59,7 @@ To remove a package, simply delete the corresponding `.yml` file from the Espans
 
 To install only specific packages, just run the corresponding command above.
 
-> **Alternative (while Hub approval is pending):** use the `--git` flag pointing directly to this repo:
+> **Tip:** Hub packages are updated manually and may lag behind the latest release. To install directly from GitHub (always up to date), use the `--git` flag:
 >
 > ```bash
 > espanso install refuos-italiano --git https://github.com/heavybeard/refuos --git-branch pkg/refuos-italiano --external
@@ -95,7 +96,8 @@ Or [open an issue](https://github.com/heavybeard/refuos/issues/new/choose) — t
 
 Re-run whichever installation method you used:
 
-- **espanso install --git:** `espanso update` (or re-run the same `espanso install ... --external` commands)
+- **Espanso Hub:** `espanso update` (updates when a new Hub version is published)
+- **GitHub (--git):** re-run the same `espanso install ... --external` commands (always gets the latest release)
 - **ZIP / individual files:** download the new files from [Releases](https://github.com/heavybeard/refuos/releases/latest) and replace the old ones
 - **One-liner:** re-run the same curl/PowerShell command
 
