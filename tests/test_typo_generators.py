@@ -184,3 +184,40 @@ class TestRegressionPairs:
 
     def test_reutrn_for_return(self):
         assert "reutrn" in ge.generate_all_typos("return")
+
+
+# ---------------------------------------------------------------------------
+# Blocklist regressions — valid Italian words must never be used as triggers
+# ---------------------------------------------------------------------------
+
+# These tests intentionally use the real ALL_WORDS (no isolated_all_words
+# fixture) because the whole point is to verify that words added to the
+# dictionaries are actually loaded at runtime and excluded from typo generation.
+@pytest.mark.parametrize(
+    ("trigger", "source"),
+    [
+        # Transpositions of common Italian words
+        ("mare", "madre"),
+        ("vero", "verso"),
+        ("lago", "largo"),
+        ("lato", "alto"),
+        ("vano", "vanno"),
+        ("temo", "tempo"),
+        ("moto", "molto"),
+        ("sena", "senza"),
+        # Missing-double variants
+        ("fato", "fatto"),
+        ("fano", "fanno"),
+        ("tropo", "troppo"),
+        ("tuto", "tutto"),
+        # Missing-char variants (including one from dev.txt)
+        ("sete", "siete"),
+        ("site", "siete"),
+        # Accent (missing-accent) variants
+        ("faro", "farò"),
+        ("pero", "però"),
+        ("sara", "sarà"),
+    ],
+)
+def test_blocklisted_word_not_generated_as_typo(trigger, source):
+    assert trigger not in ge.generate_all_typos(source)

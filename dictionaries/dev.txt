@@ -219,6 +219,7 @@ settings
 shadow
 sidebar
 singleton
+site
 skeleton
 slider
 snapshot
