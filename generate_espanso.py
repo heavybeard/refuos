@@ -43,6 +43,16 @@ ACCENT_REPLACE_MAP = {
     'ì': ['i', "i'", 'i1'], 'ò': ['o', "o'", 'o1'], 'ù': ['u', "u'", 'u1'],
 }
 
+# Common English words that would be generated as typo triggers for dev terms,
+# causing false positives. These are excluded from all generated trigger lists.
+FALSE_POSITIVE_BLOCKLIST: frozenset[str] = frozenset({
+    # High-risk: everyday words
+    "asset", "cost", "cone", "filer", "fronted", "gird", "mere", "neural",
+    "reactor", "sash", "sate", "sinner", "sting", "tale", "thee",
+    # Medium-risk: less common but real English words
+    "bade", "borer", "brach", "deign", "lading", "outlie", "sider", "sprit", "tost",
+})
+
 REPO_DIR = os.path.dirname(os.path.abspath(__file__))
 DICT_DIR = os.path.join(REPO_DIR, "dictionaries")
 
@@ -149,6 +159,7 @@ def generate_all_typos(word, include_accents=True):
     if len(word) >= 5:
         typos |= generate_missing_char(word)
     typos -= ALL_WORDS
+    typos -= FALSE_POSITIVE_BLOCKLIST
     typos.discard(word)
     return {t for t in typos if len(t) >= 2}
 
@@ -177,17 +188,19 @@ def generate_pack(words, title, desc, include_accents=True):
     for word in sorted(set(words)):
         if len(word) < 3:
             continue
-        for typo in sorted(generate_all_typos(word, include_accents)):
-            if typo in seen:
-                continue
-            seen.add(typo)
-            lines.append(f"  - trigger: {esc(typo)}")
-            lines.append(f"    replace: {esc(word)}")
-            if not any(c in word for c in 'àèéìòù'):
-                lines.append("    propagate_case: true")
-            lines.append("    word: true")
-            lines.append("")
-            total += 1
+        typos = [t for t in sorted(generate_all_typos(word, include_accents)) if t not in seen]
+        if not typos:
+            continue
+        seen.update(typos)
+        lines.append(f"  - triggers:")
+        for typo in typos:
+            lines.append(f"    - {esc(typo)}")
+        lines.append(f"    replace: {esc(word)}")
+        if not any(c in word for c in 'àèéìòù'):
+            lines.append("    propagate_case: true")
+        lines.append("    word: true")
+        lines.append("")
+        total += len(typos)
     return '\n'.join(lines), total
 
 
@@ -199,17 +212,19 @@ def generate_accenti_pack():
     short_lines = [
         "  # Short accented words (too short for the auto-generator)",
     ]
-    for trigger, replace in [
-        ("e'", "è"), ("e1", "è"),
-        ("si'", "sì"), ("si1", "sì"),
-        ("la'", "là"), ("la1", "là"),
-        ("li'", "lì"), ("li1", "lì"),
+    for triggers, replace in [
+        (("e'", "e1"), "è"),
+        (("si'", "si1"), "sì"),
+        (("la'", "la1"), "là"),
+        (("li'", "li1"), "lì"),
     ]:
-        short_lines.append(f"  - trigger: {esc(trigger)}")
+        short_lines.append(f"  - triggers:")
+        for trigger in triggers:
+            short_lines.append(f"    - {esc(trigger)}")
         short_lines.append(f"    replace: {esc(replace)}")
         short_lines.append("    word: true")
         short_lines.append("")
-        total += 1
+        total += len(triggers)
     return content + '\n' + '\n'.join(short_lines), total
 
 
@@ -350,7 +365,7 @@ PACKAGE_META = {
     "refuos-italiano": {
         "title": "Refuos Italiano",
         "description": "Real-time autocorrection for everyday Italian words. Fixes typos like acnhe→anche, comunqeu→comunque.",
-        "tags": ["italian", "autocorrect", "typo", "italiano"],
+        "tags": ["italian", "autocorrect", "typo", "italiano", "languages", "spell-correction", "typofixer"],
         "readme": textwrap.dedent("""\
             # Refuos Italiano
 
@@ -364,7 +379,7 @@ PACKAGE_META = {
             |------------|--------------|
             | `acnhe`    | `anche`      |
             | `comunqeu` | `comunque`   |
-            | `perche`   | `perché`     |
+            | `probelma` | `problema`   |
 
             ~2,500 rules in total.
 
@@ -376,7 +391,7 @@ PACKAGE_META = {
     "refuos-accenti": {
         "title": "Refuos Accenti",
         "description": "Autocorrection for Italian accents, future-tense verbs and -ità nouns. Fixes perche→perché, aggiungero→aggiungerò.",
-        "tags": ["italian", "autocorrect", "accents", "accenti", "italiano"],
+        "tags": ["italian", "autocorrect", "accents", "accenti", "italiano", "languages", "spell-correction", "typofixer"],
         "readme": textwrap.dedent("""\
             # Refuos Accenti
 
@@ -402,7 +417,7 @@ PACKAGE_META = {
     "refuos-dev": {
         "title": "Refuos Dev",
         "description": "Autocorrection for tech and code terms: HTML, CSS, patterns, paradigms, Git, DevOps, Python and more. Fixes cosnt→const, reutrn→return.",
-        "tags": ["dev", "autocorrect", "code", "html", "css", "git", "devops", "python", "patterns", "architecture"],
+        "tags": ["dev", "autocorrect", "code", "html", "css", "git", "devops", "python", "patterns", "architecture", "spell-correction", "typofixer"],
         "readme": textwrap.dedent("""\
             # Refuos Dev
 
@@ -425,7 +440,8 @@ PACKAGE_META = {
             Framework-agnostic: works for JavaScript, TypeScript, Python, Go, Java,
             and any other stack. For framework-specific terms (React hooks, Vue
             Composition API, NestJS decorators, Django ORM, etc.) use a local
-            dictionary — see `dictionaries/local/README.md`.
+            dictionary — see the [project repository](https://github.com/heavybeard/refuos)
+            for documentation on local dictionaries.
 
             ## Source
 

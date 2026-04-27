@@ -37,12 +37,13 @@ class TestGeneratePack:
         assert len(doc["matches"]) > 0
         assert total > 0
 
-    def test_every_match_has_trigger_replace_word(self):
+    def test_every_match_has_triggers_replace_word(self):
         content, _ = ge.generate_pack(["anche", "bello"], "Test", "Test pack")
         doc = _parse(content)
         for match in doc["matches"]:
-            # every match must have a trigger
-            assert "trigger" in match, f"Match missing trigger: {match}"
+            assert "triggers" in match, f"Match missing triggers: {match}"
+            assert isinstance(match["triggers"], list), f"triggers must be a list: {match}"
+            assert len(match["triggers"]) > 0, f"triggers list is empty: {match}"
             assert "replace" in match, f"Match missing replace: {match}"
             assert match.get("word") is True, f"Match missing word:true: {match}"
 
@@ -78,10 +79,13 @@ class TestGeneratePack:
         assert total == 0
 
     def test_total_matches_actual_rules_count(self):
+        # total counts individual triggers across all match blocks;
+        # len(matches) counts word groups (one per word with at least one typo)
         words = ["anche", "bello", "comunque"]
         content, total = ge.generate_pack(words, "Test", "Count check")
         doc = _parse(content)
-        assert len(doc["matches"]) == total
+        trigger_count = sum(len(m["triggers"]) for m in doc["matches"])
+        assert trigger_count == total
 
 
 # ---------------------------------------------------------------------------
@@ -103,7 +107,7 @@ class TestGenerateAccentiPack:
 
     def test_contains_trigger_rules(self):
         content, _ = ge.generate_accenti_pack()
-        assert "trigger:" in content
+        assert "triggers:" in content
 
     def test_hardcoded_short_word_rules_present(self):
         content, _ = ge.generate_accenti_pack()
@@ -133,11 +137,11 @@ class TestGenerateDevPack:
         content, _ = ge.generate_dev_pack()
         doc = _parse(content)
         for match in doc["matches"]:
-            trigger = match.get("trigger", "")
-            for ch in ACCENTED_CHARS:
-                assert ch not in trigger, (
-                    f"Accented char '{ch}' found in dev trigger '{trigger}'"
-                )
+            for trigger in match.get("triggers", []):
+                for ch in ACCENTED_CHARS:
+                    assert ch not in trigger, (
+                        f"Accented char '{ch}' found in dev trigger '{trigger}'"
+                    )
 
 
 # ---------------------------------------------------------------------------
@@ -167,8 +171,8 @@ class TestGenerateLocalPack:
         content, _ = ge.generate_local_pack("local", ["playwright", "turborepo"])
         doc = _parse(content)
         for match in doc.get("matches") or []:
-            trigger = match.get("trigger", "")
-            for ch in ACCENTED_CHARS:
-                assert ch not in trigger, (
-                    f"Accented char '{ch}' found in local trigger '{trigger}'"
-                )
+            for trigger in match.get("triggers", []):
+                for ch in ACCENTED_CHARS:
+                    assert ch not in trigger, (
+                        f"Accented char '{ch}' found in local trigger '{trigger}'"
+                    )
