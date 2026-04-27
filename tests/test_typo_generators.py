@@ -184,3 +184,44 @@ class TestRegressionPairs:
 
     def test_reutrn_for_return(self):
         assert "reutrn" in ge.generate_all_typos("return")
+
+
+# ---------------------------------------------------------------------------
+# Blocklist regressions — valid Italian words must never be used as triggers
+# ---------------------------------------------------------------------------
+
+class TestBlocklistRegressions:
+    """Verify that blocklisted Italian words are not generated as typos."""
+
+    def test_mare_not_a_typo_of_madre(self):
+        assert "mare" not in ge.generate_all_typos("madre")
+
+    def test_vero_not_a_typo_of_verso(self):
+        assert "vero" not in ge.generate_all_typos("verso")
+
+    def test_lago_not_a_typo_of_largo(self):
+        assert "lago" not in ge.generate_all_typos("largo")
+
+    def test_lato_not_a_typo_of_alto(self):
+        assert "lato" not in ge.generate_all_typos("alto")
+
+    def test_fato_not_a_typo_of_fatto(self):
+        assert "fato" not in ge.generate_all_typos("fatto")
+
+    def test_vano_not_a_typo_of_vanno(self):
+        assert "vano" not in ge.generate_all_typos("vanno")
+
+    def test_sete_not_a_typo_of_siete(self):
+        assert "sete" not in ge.generate_all_typos("siete")
+
+    def test_temo_not_a_typo_of_tempo(self):
+        assert "temo" not in ge.generate_all_typos("tempo")
+
+    def test_moto_not_a_typo_of_molto(self):
+        assert "moto" not in ge.generate_all_typos("molto")
+
+    def test_faro_not_a_typo_of_faro_accented(self):
+        assert "faro" not in ge.generate_all_typos("farò")
+
+    def test_pero_not_a_typo_of_pero_accented(self):
+        assert "pero" not in ge.generate_all_typos("però")
