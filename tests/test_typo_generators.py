@@ -190,38 +190,34 @@ class TestRegressionPairs:
 # Blocklist regressions — valid Italian words must never be used as triggers
 # ---------------------------------------------------------------------------
 
-class TestBlocklistRegressions:
-    """Verify that blocklisted Italian words are not generated as typos."""
-
-    def test_mare_not_a_typo_of_madre(self):
-        assert "mare" not in ge.generate_all_typos("madre")
-
-    def test_vero_not_a_typo_of_verso(self):
-        assert "vero" not in ge.generate_all_typos("verso")
-
-    def test_lago_not_a_typo_of_largo(self):
-        assert "lago" not in ge.generate_all_typos("largo")
-
-    def test_lato_not_a_typo_of_alto(self):
-        assert "lato" not in ge.generate_all_typos("alto")
-
-    def test_fato_not_a_typo_of_fatto(self):
-        assert "fato" not in ge.generate_all_typos("fatto")
-
-    def test_vano_not_a_typo_of_vanno(self):
-        assert "vano" not in ge.generate_all_typos("vanno")
-
-    def test_sete_not_a_typo_of_siete(self):
-        assert "sete" not in ge.generate_all_typos("siete")
-
-    def test_temo_not_a_typo_of_tempo(self):
-        assert "temo" not in ge.generate_all_typos("tempo")
-
-    def test_moto_not_a_typo_of_molto(self):
-        assert "moto" not in ge.generate_all_typos("molto")
-
-    def test_faro_not_a_typo_of_faro_accented(self):
-        assert "faro" not in ge.generate_all_typos("farò")
-
-    def test_pero_not_a_typo_of_pero_accented(self):
-        assert "pero" not in ge.generate_all_typos("però")
+# These tests intentionally use the real ALL_WORDS (no isolated_all_words
+# fixture) because the whole point is to verify that words added to the
+# dictionaries are actually loaded at runtime and excluded from typo generation.
+@pytest.mark.parametrize(
+    ("trigger", "source"),
+    [
+        # Transpositions of common Italian words
+        ("mare", "madre"),
+        ("vero", "verso"),
+        ("lago", "largo"),
+        ("lato", "alto"),
+        ("vano", "vanno"),
+        ("temo", "tempo"),
+        ("moto", "molto"),
+        ("sena", "senza"),
+        # Missing-double variants
+        ("fato", "fatto"),
+        ("fano", "fanno"),
+        ("tropo", "troppo"),
+        ("tuto", "tutto"),
+        # Missing-char variants (including one from dev.txt)
+        ("sete", "siete"),
+        ("site", "siete"),
+        # Accent (missing-accent) variants
+        ("faro", "farò"),
+        ("pero", "però"),
+        ("sara", "sarà"),
+    ],
+)
+def test_blocklisted_word_not_generated_as_typo(trigger, source):
+    assert trigger not in ge.generate_all_typos(source)

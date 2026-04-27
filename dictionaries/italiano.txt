@@ -3,7 +3,6 @@
 # One word per line. Lines starting with # are comments.
 # To add a word: add it here (one per line) and open a PR.
 
-
 abbiamo
 acqua
 acro
@@ -288,7 +287,6 @@ sicuramente
 sicuro
 siete
 sistema
-site
 situazione
 soluzione
 soluzioni
