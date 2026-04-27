@@ -221,3 +221,38 @@ class TestRegressionPairs:
 )
 def test_blocklisted_word_not_generated_as_typo(trigger, source):
     assert trigger not in ge.generate_all_typos(source)
+
+
+# ---------------------------------------------------------------------------
+# FALSE_POSITIVE_BLOCKLIST — no blocked word must appear as a trigger
+# ---------------------------------------------------------------------------
+
+class TestFalsePositiveBlocklist:
+    """No word in the blocklist must ever appear as a generated trigger."""
+
+    def test_blocklist_is_non_empty(self):
+        assert len(ge.FALSE_POSITIVE_BLOCKLIST) > 0
+
+    def test_no_blocklist_word_in_dev_triggers(self):
+        """All DEV words combined must not produce any blocked trigger."""
+        for word in ge.DEV_WORDS:
+            if len(word) < 3:
+                continue
+            typos = ge.generate_all_typos(word, include_accents=False)
+            blocked_hits = typos & ge.FALSE_POSITIVE_BLOCKLIST
+            assert not blocked_hits, (
+                f"Blocklisted triggers {blocked_hits!r} "
+                f"generated for dev word '{word}'"
+            )
+
+    def test_blocklist_words_are_excluded_regardless_of_all_words(self, monkeypatch):
+        """Blocklist takes effect even when ALL_WORDS is empty."""
+        monkeypatch.setattr(ge, "ALL_WORDS", set())
+        typos = ge.generate_all_typos("string", include_accents=False)
+        assert "sting" not in typos
+
+    def test_blocklist_does_not_affect_non_blocked_typos(self, monkeypatch):
+        """Legitimate typos that are not in the blocklist still appear."""
+        monkeypatch.setattr(ge, "ALL_WORDS", set())
+        typos = ge.generate_all_typos("string", include_accents=False)
+        assert len(typos) > 0

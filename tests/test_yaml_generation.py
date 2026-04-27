@@ -42,7 +42,8 @@ class TestGeneratePack:
         doc = _parse(content)
         for match in doc["matches"]:
             assert "triggers" in match, f"Match missing triggers: {match}"
-            assert isinstance(match["triggers"], list), f"triggers should be a list: {match}"
+            assert isinstance(match["triggers"], list), f"triggers must be a list: {match}"
+            assert len(match["triggers"]) > 0, f"triggers list is empty: {match}"
             assert "replace" in match, f"Match missing replace: {match}"
             assert match.get("word") is True, f"Match missing word:true: {match}"
 

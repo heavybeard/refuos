@@ -43,6 +43,16 @@ ACCENT_REPLACE_MAP = {
     'ì': ['i', "i'", 'i1'], 'ò': ['o', "o'", 'o1'], 'ù': ['u', "u'", 'u1'],
 }
 
+# Common English words that would be generated as typo triggers for dev terms,
+# causing false positives. These are excluded from all generated trigger lists.
+FALSE_POSITIVE_BLOCKLIST: frozenset[str] = frozenset({
+    # High-risk: everyday words
+    "asset", "cost", "cone", "filer", "fronted", "gird", "mere", "neural",
+    "reactor", "sash", "sate", "sinner", "sting", "tale", "thee",
+    # Medium-risk: less common but real English words
+    "bade", "borer", "brach", "deign", "lading", "outlie", "sider", "sprit", "tost",
+})
+
 REPO_DIR = os.path.dirname(os.path.abspath(__file__))
 DICT_DIR = os.path.join(REPO_DIR, "dictionaries")
 
@@ -149,6 +159,7 @@ def generate_all_typos(word, include_accents=True):
     if len(word) >= 5:
         typos |= generate_missing_char(word)
     typos -= ALL_WORDS
+    typos -= FALSE_POSITIVE_BLOCKLIST
     typos.discard(word)
     return {t for t in typos if len(t) >= 2}
 
